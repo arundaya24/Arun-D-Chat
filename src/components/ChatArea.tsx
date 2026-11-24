@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Message } from "ai";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import {
