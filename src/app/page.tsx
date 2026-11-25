@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useChat } from "ai/react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
+  const isSubmittingRef = useRef(false);
 
   const {
     messages,
@@ -24,6 +25,7 @@ export default function ChatPage() {
     isLoading,
     stop,
     reload,
+    append,
     setMessages,
     setInput,
   } = useChat({
@@ -71,7 +73,7 @@ export default function ChatPage() {
     loadMemoryCount();
   }, [loadChats, loadMemoryCount]);
 
-  const handleNewChat = async () => {
+  const handleNewChat = async (): Promise<string | null> => {
     try {
       const res = await fetch("/api/chats", {
         method: "POST",
@@ -86,11 +88,14 @@ export default function ChatPage() {
         setChats((prev) => [data.chat, ...prev]);
         setActiveChatId(data.chat.id);
         setMessages([]);
+        return data.chat.id;
       }
+      return null;
     } catch (err) {
       console.error("Gagal membuat chat baru:", err);
       setActiveChatId(null);
       setMessages([]);
+      return null;
     }
   };
 
@@ -134,6 +139,42 @@ export default function ChatPage() {
 
   const handleSendPreset = (presetText: string) => {
     setInput(presetText);
+  };
+
+  const handleChatSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!input.trim() || isLoading || isSubmittingRef.current) return;
+
+    if (activeChatId) {
+      handleSubmit(event);
+      return;
+    }
+
+    const prompt = input;
+    isSubmittingRef.current = true;
+    void (async () => {
+      try {
+        const chatId = await handleNewChat();
+        if (!chatId) {
+          alert("Gagal membuat percakapan baru. Silakan coba lagi.");
+          return;
+        }
+
+        const response = append(
+          { role: "user", content: prompt },
+          { body: { chatId, userId: "user_default_01" } }
+        );
+        setInput((currentInput) =>
+          currentInput === prompt ? "" : currentInput
+        );
+        await response;
+      } catch (err) {
+        console.error("Gagal mengirim pesan:", err);
+        alert("Pesan gagal dikirim. Silakan coba lagi.");
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    })();
   };
 
   const activeChatTitle =
@@ -197,15 +238,7 @@ export default function ChatPage() {
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
-          handleSubmit={(event) => {
-            if (!activeChatId) {
-              handleNewChat().then(() => {
-                handleSubmit(event);
-              });
-            } else {
-              handleSubmit(event);
-            }
-          }}
+          handleSubmit={handleChatSubmit}
           isLoading={isLoading}
           stop={stop}
         />
