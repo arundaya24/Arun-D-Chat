@@ -17,13 +17,12 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
         components={{
-          code({ node, inline, className, children, ...props }: any) {
+          code({ className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
-            const language = match ? match[1] : "";
             const codeString = String(children).replace(/\n$/, "");
 
-            if (!inline && match) {
-              return <CodeBlock language={language} code={codeString} />;
+            if (match) {
+              return <CodeBlock language={match[1]} code={codeString} />;
             }
 
             return (

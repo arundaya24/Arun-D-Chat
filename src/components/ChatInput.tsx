@@ -20,7 +20,6 @@ export function ChatInput({
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto resize textarea sesuai jumlah baris teks
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";

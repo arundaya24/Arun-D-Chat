@@ -31,7 +31,6 @@ export function MemoryManagerModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<string>("all");
 
-  // Form tambah memori manual
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState<string>("preference");
   const [adding, setAdding] = useState(false);
@@ -242,11 +241,10 @@ export function MemoryManagerModal({
               <button
                 key={cat.id}
                 onClick={() => setActiveTab(cat.id)}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  activeTab === cat.id
+                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${activeTab === cat.id
                     ? "bg-neutral-200 text-neutral-900 font-semibold"
                     : "bg-[#2a2a2a] text-neutral-400 hover:text-white"
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>

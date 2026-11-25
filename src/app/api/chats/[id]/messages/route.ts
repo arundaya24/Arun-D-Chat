@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-/**
- * GET /api/chats/[id]/messages
- * Mengambil histori pesan untuk sesi chat tertentu
- */
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }

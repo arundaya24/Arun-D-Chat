@@ -206,7 +206,6 @@ export default function ChatPage() {
               handleSubmit(event);
             }
           }}
-          setInput={setInput}
           isLoading={isLoading}
           stop={stop}
         />

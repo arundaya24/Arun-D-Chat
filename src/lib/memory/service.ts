@@ -6,9 +6,6 @@ import { MemoryItem } from "@/types";
 export const BASE_SYSTEM_PROMPT =
   "Kamu adalah asisten AI tingkat lanjut yang cerdas, logis, objektif, dan langsung ke inti permasalahan (to-the-point). Hindari basa-basi yang tidak perlu, jangan berhalusinasi, dan jika sebuah informasi tidak pasti atau di luar pengetahuanmu, katakan dengan jujur. Selalu gunakan penalaran terstruktur sebelum menjawab pertanyaan kompleks.";
 
-/**
- * Membentuk system prompt lengkap dengan injeksi memori relevan (RAG)
- */
 export function buildAugmentedSystemPrompt(memories: MemoryItem[]): string {
   if (!memories || memories.length === 0) {
     return BASE_SYSTEM_PROMPT;
@@ -27,9 +24,6 @@ ${memoryList}
 Gunakan memori di atas secara alami untuk menyesuaikan jawabanmu agar relevan, personal, dan konsisten tanpa perlu secara eksplisit mengatakan 'berdasarkan database memoriku' atau sejenisnya.`;
 }
 
-/**
- * Mengambil memori yang paling relevan secara semantik dengan pesan user
- */
 export async function retrieveRelevantMemories(
   query: string,
   userId: string = "user_default_01",
@@ -61,10 +55,6 @@ export async function retrieveRelevantMemories(
   }
 }
 
-/**
- * Background Task: Menganalisis obrolan untuk mengekstrak fakta permanen baru tentang user
- * dan menyimpannya ke pgvector jika belum ada.
- */
 export async function extractAndSaveMemories(
   userMessage: string,
   assistantResponse: string,
@@ -111,10 +101,8 @@ Hasil JSON:`;
     for (const item of extracted) {
       if (!item.content || item.content.length < 5) continue;
 
-      // 1. Buat embedding untuk fakta baru
       const newEmbedding = await generateEmbedding(item.content);
 
-      // 2. Cek apakah fakta serupa sudah ada (Deduplikasi cerdas dengan threshold 0.85)
       const { data: existingSimilar } = await supabase.rpc("match_memories", {
         query_embedding: newEmbedding,
         match_threshold: 0.85,
@@ -123,11 +111,9 @@ Hasil JSON:`;
       });
 
       if (existingSimilar && existingSimilar.length > 0) {
-        // Fakta sudah pernah disimpan sebelumnya, lewati untuk mencegah duplikasi
         continue;
       }
 
-      // 3. Simpan ke database Supabase
       const category = ["preference", "fact", "profile", "goal", "work"].includes(
         item.category
       )
@@ -146,9 +132,6 @@ Hasil JSON:`;
   }
 }
 
-/**
- * Background Task: Membuat judul obrolan otomatis yang singkat dan padat (3-5 kata)
- */
 export async function generateChatTitle(
   firstMessage: string,
   chatId: string

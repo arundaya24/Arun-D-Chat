@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
   Brain,
-  FilePlus2,
   MessageSquare,
   Plus,
   Search,

@@ -1,4 +1,3 @@
-// Simple In-Memory Sliding Window Rate Limiter untuk Serverless / Edge
 interface RateRecord {
   count: number;
   resetTime: number;
