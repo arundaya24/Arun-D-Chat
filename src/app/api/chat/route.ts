@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
     const model = getChatModel();
 
-    const result = streamText({
+    const result = await streamText({
       model,
       system: systemPrompt,
       messages,

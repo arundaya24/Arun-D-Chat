@@ -30,6 +30,7 @@ export default function ChatPage() {
     setInput,
   } = useChat({
     api: "/api/chat",
+    keepLastMessageOnError: true,
     body: {
       chatId: activeChatId,
       userId: "user_default_01",
@@ -84,17 +85,24 @@ export default function ChatPage() {
         }),
       });
       const data = await res.json();
-      if (data.chat) {
-        setChats((prev) => [data.chat, ...prev]);
-        setActiveChatId(data.chat.id);
-        setMessages([]);
-        return data.chat.id;
+      if (!res.ok) {
+        throw new Error(
+          data.error || `Server menolak pembuatan chat (${res.status}).`
+        );
       }
-      return null;
+      if (!data.chat?.id) {
+        throw new Error("Server tidak mengembalikan data percakapan.");
+      }
+
+      setChats((prev) => [data.chat, ...prev]);
+      setActiveChatId(data.chat.id);
+      setMessages([]);
+      return data.chat.id;
     } catch (err) {
       console.error("Gagal membuat chat baru:", err);
-      setActiveChatId(null);
-      setMessages([]);
+      const message =
+        err instanceof Error ? err.message : "Kesalahan yang tidak diketahui.";
+      alert(`Gagal membuat percakapan baru: ${message}`);
       return null;
     }
   };
@@ -155,17 +163,11 @@ export default function ChatPage() {
     void (async () => {
       try {
         const chatId = await handleNewChat();
-        if (!chatId) {
-          alert("Gagal membuat percakapan baru. Silakan coba lagi.");
-          return;
-        }
+        if (!chatId) return;
 
         const response = append(
           { role: "user", content: prompt },
           { body: { chatId, userId: "user_default_01" } }
-        );
-        setInput((currentInput) =>
-          currentInput === prompt ? "" : currentInput
         );
         await response;
       } catch (err) {
