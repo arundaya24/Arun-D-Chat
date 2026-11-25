@@ -35,52 +35,42 @@ export function ChatArea({
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+    <div className="chat-scroll">
       {messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
       ) : (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="message-stack">
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const isLastAssistant =
               !isUser && index === messages.length - 1;
 
             return (
-              <div
-                key={message.id || index}
-                className={`flex gap-4 ${
-                  isUser ? "justify-end" : "justify-start"
-                }`}
-              >
-                {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center flex-shrink-0 text-emerald-400 mt-0.5">
-                    <Sparkles className="w-4 h-4" />
+              <div key={message.id || index} className="message-row">
+                <div className={`message-mark${isUser ? "" : " is-assistant"}`}>
+                  {isUser ? <User size={15} /> : <Sparkles size={15} />}
+                </div>
+                <div className="message-main">
+                  <div className="message-author">
+                    {isUser ? "Anda" : "Arun-D'Chat"}
                   </div>
-                )}
-
-                <div
-                  className={`group relative max-w-[85%] rounded-2xl px-4 py-3.5 transition-all shadow-sm ${
-                    isUser
-                      ? "bg-[#2f2f2f] text-white border border-[#3e3e3e]"
-                      : "bg-[#212121] text-[#ececec] border border-transparent w-full"
-                  }`}
-                >
                   {isUser ? (
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
+                    <div className="message-content is-user">
                       {message.content}
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="message-content">
                       <MarkdownRenderer content={message.content} />
-                      <div className="flex items-center gap-2 pt-2 text-xs text-neutral-400 border-t border-[#2e2e2e]">
+                      <div className="message-actions">
                         <CopyMessageButton content={message.content} />
                         {isLastAssistant && !isLoading && (
                           <button
+                            type="button"
                             onClick={onReload}
-                            className="flex items-center gap-1 hover:text-white transition"
+                            className="regenerate-button"
                             title="Regenerate respon"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
+                            <RotateCcw size={14} />
                             <span>Regenerasi</span>
                           </button>
                         )}
@@ -88,28 +78,25 @@ export function ChatArea({
                     </div>
                   )}
                 </div>
-
-                {isUser && (
-                  <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 text-neutral-300 mt-0.5">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
               </div>
             );
           })}
 
           {isLoading && (
-            <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center flex-shrink-0 text-emerald-400 animate-pulse">
-                <Sparkles className="w-4 h-4" />
+            <div className="message-row">
+              <div className="message-mark is-assistant">
+                <Sparkles size={15} />
               </div>
-              <div className="bg-[#212121] rounded-2xl px-4 py-3 text-sm text-neutral-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.4s]" />
-                <span className="text-xs text-neutral-400 ml-1">
-                  Menganalisis memori &amp; menyusun penalaran...
-                </span>
+              <div className="message-main">
+                <div className="message-author">Arun-D'Chat</div>
+                <div className="typing-indicator">
+                  <span className="typing-bars">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                  <span>Menganalisis memori &amp; menyusun penalaran...</span>
+                </div>
               </div>
             </div>
           )}
@@ -136,18 +123,19 @@ function CopyMessageButton({ content }: { content: string }) {
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
-      className="flex items-center gap-1 hover:text-white transition"
+      className="copy-message-button"
       title="Salin seluruh pesan"
     >
       {copied ? (
         <>
-          <Check className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-emerald-400">Tersalin</span>
+          <Check size={14} />
+          <span>Tersalin</span>
         </>
       ) : (
         <>
-          <Copy className="w-3.5 h-3.5" />
+          <Copy size={14} />
           <span>Salin</span>
         </>
       )}
@@ -192,34 +180,31 @@ function EmptyStateScreen({
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-2xl mx-auto text-center">
-      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-950/40 mb-4">
-        <Sparkles className="w-6 h-6 text-white" />
+    <div className="empty-state">
+      <div className="empty-mark">
+        <Sparkles size={19} />
       </div>
 
-      <h1 className="text-2xl font-bold text-white mb-2">
+      <h1 className="empty-heading">
         Bagaimana saya bisa membantu Anda hari ini?
       </h1>
-      <p className="text-sm text-neutral-400 mb-8 max-w-md">
+      <p className="empty-description">
         Dilengkapi dengan penalaran objektif, Vercel AI SDK, serta memori jangka panjang cerdas (pgvector RAG) yang terus belajar.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full text-left">
+      <div className="suggestion-grid">
         {presets.map((item, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={() => onSendPreset(item.prompt)}
-            className="p-4 rounded-xl bg-[#2a2a2a]/60 hover:bg-[#2f2f2f] border border-[#3c3c3c] transition-all hover:border-neutral-500 flex flex-col justify-between group"
+            className="suggestion-card"
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              {item.icon}
-              <span className="text-sm font-medium text-white group-hover:text-emerald-300 transition">
-                {item.title}
-              </span>
+            <div className="suggestion-topline">
+              <span className="suggestion-icon">{item.icon}</span>
+              <span className="suggestion-title">{item.title}</span>
             </div>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              {item.desc}
-            </p>
+            <p className="suggestion-description">{item.desc}</p>
           </button>
         ))}
       </div>

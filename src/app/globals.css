@@ -122,6 +122,23 @@ textarea:focus-visible {
   letter-spacing: -0.035em;
 }
 
+.sidebar-close {
+  display: none;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  margin-left: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+
+.sidebar-close:hover {
+  color: var(--color-ink);
+}
+
 .sidebar-new-chat,
 .memory-action,
 .history-select,
@@ -406,6 +423,30 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.header-memory {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition:
+    background-color var(--duration-ui) var(--ease-ui),
+    border-color var(--duration-ui) var(--ease-ui),
+    color var(--duration-ui) var(--ease-ui);
+}
+
+.header-memory:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
 }
 
 .mobile-menu,
@@ -1059,6 +1100,14 @@ textarea:focus-visible {
     min-height: 54px;
     flex-basis: 54px;
     padding: 0 15px;
+  }
+
+  .header-memory {
+    display: none;
+  }
+
+  .sidebar-close {
+    display: grid;
   }
 
   .mobile-menu,
