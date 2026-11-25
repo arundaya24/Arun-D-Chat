@@ -7,7 +7,7 @@ import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
 import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { ChatSession } from "@/types";
-import { Menu, Plus } from "lucide-react";
+import { Brain, Menu } from "lucide-react";
 
 export default function ChatPage() {
   const [chats, setChats] = useState<ChatSession[]>([]);
@@ -16,7 +16,6 @@ export default function ChatPage() {
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
 
-  // Vercel AI SDK useChat Hook
   const {
     messages,
     input,
@@ -34,7 +33,6 @@ export default function ChatPage() {
       userId: "user_default_01",
     },
     onFinish: () => {
-      // Refresh memory count and chat list after assistant answers
       loadMemoryCount();
       loadChats();
     },
@@ -73,7 +71,6 @@ export default function ChatPage() {
     loadMemoryCount();
   }, [loadChats, loadMemoryCount]);
 
-  // Buat sesi chat baru
   const handleNewChat = async () => {
     try {
       const res = await fetch("/api/chats", {
@@ -97,7 +94,6 @@ export default function ChatPage() {
     }
   };
 
-  // Pilih sesi chat dari sidebar
   const handleSelectChat = async (chatId: string) => {
     if (chatId === activeChatId) return;
     setActiveChatId(chatId);
@@ -108,10 +104,10 @@ export default function ChatPage() {
       const data = await res.json();
       if (data.messages) {
         setMessages(
-          data.messages.map((m: any) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
+          data.messages.map((message: { id: string; role: string; content: string }) => ({
+            id: message.id,
+            role: message.role,
+            content: message.content,
           }))
         );
       }
@@ -121,13 +117,12 @@ export default function ChatPage() {
     }
   };
 
-  // Hapus sesi chat
   const handleDeleteChat = async (chatId: string) => {
     if (!confirm("Hapus percakapan ini secara permanen?")) return;
 
     try {
       await fetch(`/api/chats?id=${chatId}`, { method: "DELETE" });
-      setChats((prev) => prev.filter((c) => c.id !== chatId));
+      setChats((prev) => prev.filter((chat) => chat.id !== chatId));
       if (activeChatId === chatId) {
         setActiveChatId(null);
         setMessages([]);
@@ -141,9 +136,11 @@ export default function ChatPage() {
     setInput(presetText);
   };
 
+  const activeChatTitle =
+    chats.find((chat) => chat.id === activeChatId)?.title || "Percakapan baru";
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#212121] text-[#ececec]">
-      {/* Sidebar Kiri */}
+    <div className="app-shell">
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
@@ -152,32 +149,44 @@ export default function ChatPage() {
         onDeleteChat={handleDeleteChat}
         onOpenMemoryModal={() => setIsMemoryModalOpen(true)}
         isOpen={isSidebarOpen}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
         memoryCount={memoryCount}
       />
 
-      {/* Main Chat Workspace */}
-      <main className="flex-1 flex flex-col h-full min-w-0 relative">
-        {/* Top Header Mobile / Nav */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#2d2d2d] bg-[#212121] md:hidden">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-[#2f2f2f] transition"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="text-sm font-semibold text-white truncate max-w-[200px]">
-            {chats.find((c) => c.id === activeChatId)?.title || "Arun-D'Chat"}
-          </span>
-          <button
-            onClick={handleNewChat}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-[#2f2f2f] transition"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
+      <main className="workspace">
+        <header className="workspace-header">
+          <div className="workspace-title-wrap">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="mobile-menu active:scale-95"
+              aria-label="Buka riwayat percakapan"
+            >
+              <Menu size={17} />
+            </button>
+            <span className="workspace-title">{activeChatTitle}</span>
+          </div>
+          <div className="workspace-actions">
+            <button
+              type="button"
+              onClick={() => setIsMemoryModalOpen(true)}
+              className="header-memory active:scale-95"
+            >
+              <Brain size={15} />
+              <span>Memori</span>
+              <span className="mono-label">{memoryCount}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMemoryModalOpen(true)}
+              className="mobile-memory active:scale-95"
+              aria-label="Buka memori"
+            >
+              <Brain size={16} />
+            </button>
+          </div>
+        </header>
 
-        {/* Message View Area */}
         <ChatArea
           messages={messages}
           isLoading={isLoading}
@@ -185,26 +194,24 @@ export default function ChatPage() {
           onReload={reload}
         />
 
-        {/* Sticky Input Bar at Bottom */}
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
-          handleSubmit={(e) => {
-            // Jika belum ada chat yang aktif saat mengirim pesan pertama, buat chat baru
+          handleSubmit={(event) => {
             if (!activeChatId) {
               handleNewChat().then(() => {
-                handleSubmit(e);
+                handleSubmit(event);
               });
             } else {
-              handleSubmit(e);
+              handleSubmit(event);
             }
           }}
+          setInput={setInput}
           isLoading={isLoading}
           stop={stop}
         />
       </main>
 
-      {/* Modal Kelola Memori Jangka Panjang */}
       <MemoryManagerModal
         isOpen={isMemoryModalOpen}
         onClose={() => {

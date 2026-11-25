@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Arun-D'Chat | Production AI Chatbot & Vector Memory",
+  title: "Arun-D'Chat",
   description:
-    "Chatbot AI Full-Stack Next.js 14+ dengan Vercel AI SDK, Memori Jangka Panjang Otomatis (pgvector RAG), dan Penalaran Terstruktur.",
+    "Ruang percakapan untuk mencari jawaban, menulis, belajar, dan memecahkan masalah.",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark h-full">
-      <body className="h-full bg-[#212121] text-[#ececec] antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+      <body className="h-full antialiased selection:bg-emerald-500/30 selection:text-emerald-100">
         {children}
       </body>
     </html>
