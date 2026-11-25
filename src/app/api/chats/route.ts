@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-/**
- * GET /api/chats?userId=...
- * Mengambil daftar riwayat sesi obrolan
- */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -31,10 +27,6 @@ export async function GET(req: Request) {
   }
 }
 
-/**
- * POST /api/chats
- * Membuat sesi obrolan baru
- */
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -42,7 +34,6 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin();
     if (!supabase) {
-      // Mock fallback jika database belum di-connect
       return NextResponse.json({
         chat: {
           id: "local_" + Date.now(),
@@ -73,10 +64,6 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * DELETE /api/chats?id=...
- * Menghapus sesi obrolan beserta pesan-pesannya
- */
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { generateEmbedding } from "@/lib/ai/provider";
 
-/**
- * GET /api/memories?userId=...
- * Mengambil seluruh memori yang telah dipelajari AI tentang user
- */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -32,10 +28,6 @@ export async function GET(req: Request) {
   }
 }
 
-/**
- * POST /api/memories
- * Menambah memori manual oleh pengguna
- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -56,7 +48,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Buat embedding untuk fakta manual
     const embedding = await generateEmbedding(content.trim());
 
     const { data, error } = await supabase
@@ -80,10 +71,6 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * DELETE /api/memories?id=...
- * Menghapus memori tertentu
- */
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
