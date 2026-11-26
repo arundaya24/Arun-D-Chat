@@ -38,7 +38,7 @@ export function getChatModel() {
   const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
   });
-  const modelName = process.env.AI_MODEL || "gemini-1.5-pro";
+  const modelName = process.env.AI_MODEL || "gemini-3.5-flash-lite";
   return google(modelName);
 }
 
@@ -56,7 +56,7 @@ export function getFastModel() {
   const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
   });
-  const modelName = process.env.AI_FAST_MODEL || "gemini-1.5-flash";
+  const modelName = process.env.AI_FAST_MODEL || "gemini-3.1-flash-lite";
   return google(modelName);
 }
 
@@ -74,7 +74,7 @@ export function getEmbeddingModel() {
   const google = createGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
   });
-  const modelName = process.env.EMBEDDING_MODEL || "text-embedding-004";
+  const modelName = process.env.EMBEDDING_MODEL || "gemini-embedding-001";
   return google.textEmbeddingModel(modelName);
 }
 

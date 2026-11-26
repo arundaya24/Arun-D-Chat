@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Message } from "ai";
-import { MarkdownRenderer } from "./MarkdownRenderer";
 import {
   Sparkles,
   User,
@@ -14,6 +14,14 @@ import {
   BrainCircuit,
   ShieldCheck,
 } from "lucide-react";
+
+const MarkdownRenderer = dynamic(
+  () => import("./MarkdownRenderer").then((mod) => mod.MarkdownRenderer),
+  {
+    ssr: false,
+    loading: () => <div className="text-sm text-neutral-400">Memuat format...</div>,
+  }
+);
 
 interface ChatAreaProps {
   messages: Message[];
