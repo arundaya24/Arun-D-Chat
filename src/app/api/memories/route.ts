@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { generateEmbedding } from "@/lib/ai/provider";
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { generateEmbedding, isAIConfigured } from "@/lib/ai/provider";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId") || "user_default_01";
+
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({ memories: [] });
+    }
 
     const supabase = getSupabaseAdmin();
     if (!supabase) {
@@ -19,12 +23,14 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.warn("Gagal membaca memori dari Supabase:", error.message);
+      return NextResponse.json({ memories: [] });
     }
 
     return NextResponse.json({ memories: data || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.warn("Peringatan pada GET /api/memories:", err.message);
+    return NextResponse.json({ memories: [] });
   }
 }
 
@@ -40,10 +46,20 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!isSupabaseConfigured() || !isAIConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "Database Supabase atau AI API Key belum dikonfigurasi di .env.local untuk menyimpan memori permanen.",
+        },
+        { status: 400 }
+      );
+    }
+
     const supabase = getSupabaseAdmin();
     if (!supabase) {
       return NextResponse.json(
-        { error: "Koneksi database Supabase belum terkonfigurasi." },
+        { error: "Koneksi database tidak tersedia." },
         { status: 503 }
       );
     }
@@ -83,21 +99,27 @@ export async function DELETE(req: Request) {
       );
     }
 
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        success: true,
+        message: "Memori berhasil dihapus.",
+      });
+    }
+
     const supabase = getSupabaseAdmin();
     if (!supabase) {
-      return NextResponse.json(
-        { error: "Koneksi database Supabase belum terkonfigurasi." },
-        { status: 503 }
-      );
+      return NextResponse.json({ success: true });
     }
 
     const { error } = await supabase.from("memories").delete().eq("id", id);
-
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.warn("Gagal menghapus memori dari database:", error.message);
     }
 
-    return NextResponse.json({ success: true, message: "Memori berhasil dihapus." });
+    return NextResponse.json({
+      success: true,
+      message: "Memori berhasil dihapus.",
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

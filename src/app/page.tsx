@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
   const {
@@ -36,36 +37,42 @@ export default function ChatPage() {
       userId: "user_default_01",
     },
     onFinish: () => {
+      setErrorMessage(null);
       loadMemoryCount();
       loadChats();
     },
     onError: (err) => {
-      console.error("Kesalahan streaming AI:", err);
-      alert("Terjadi kesalahan saat berkomunikasi dengan AI: " + err.message);
+      console.warn("Kesalahan streaming AI:", err);
+      let msg = err.message || "Terjadi kesalahan saat berkomunikasi dengan AI.";
+      try {
+        const parsed = JSON.parse(err.message);
+        if (parsed.error) msg = parsed.error;
+      } catch {}
+      setErrorMessage(msg);
     },
   });
 
   const loadChats = useCallback(async () => {
     try {
       const res = await fetch("/api/chats?userId=user_default_01");
-      const data = await res.json();
-      if (data.chats) {
+      const data = await res.json().catch(() => ({}));
+      if (data.chats && Array.isArray(data.chats)) {
         setChats(data.chats);
       }
     } catch (err) {
-      console.error("Gagal memuat daftar chat:", err);
+      console.warn("Gagal memuat daftar chat:", err);
     }
   }, []);
 
   const loadMemoryCount = useCallback(async () => {
     try {
       const res = await fetch("/api/memories?userId=user_default_01");
-      const data = await res.json();
-      if (data.memories) {
+      const data = await res.json().catch(() => ({}));
+      if (data.memories && Array.isArray(data.memories)) {
         setMemoryCount(data.memories.length);
       }
     } catch (err) {
-      console.error("Gagal memuat jumlah memori:", err);
+      console.warn("Gagal memuat jumlah memori:", err);
     }
   }, []);
 
@@ -84,26 +91,35 @@ export default function ChatPage() {
           userId: "user_default_01",
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(
-          data.error || `Server menolak pembuatan chat (${res.status}).`
-        );
-      }
-      if (!data.chat?.id) {
-        throw new Error("Server tidak mengembalikan data percakapan.");
-      }
+      const data = await res.json().catch(() => ({}));
+      const newChat: ChatSession = data.chat || {
+        id: crypto.randomUUID(),
+        title: "Percakapan Baru",
+        user_id: "user_default_01",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      setChats((prev) => [data.chat, ...prev]);
-      setActiveChatId(data.chat.id);
+      setChats((prev) => [newChat, ...prev.filter((c) => c.id !== newChat.id)]);
+      setActiveChatId(newChat.id);
       setMessages([]);
-      return data.chat.id;
+      setErrorMessage(null);
+      return newChat.id;
     } catch (err) {
-      console.error("Gagal membuat chat baru:", err);
-      const message =
-        err instanceof Error ? err.message : "Kesalahan yang tidak diketahui.";
-      alert(`Gagal membuat percakapan baru: ${message}`);
-      return null;
+      console.warn("Membuat chat baru dengan fallback lokal:", err);
+      const localId = crypto.randomUUID();
+      const localChat: ChatSession = {
+        id: localId,
+        title: "Percakapan Baru",
+        user_id: "user_default_01",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setChats((prev) => [localChat, ...prev]);
+      setActiveChatId(localId);
+      setMessages([]);
+      setErrorMessage(null);
+      return localId;
     }
   };
 
@@ -111,21 +127,24 @@ export default function ChatPage() {
     if (chatId === activeChatId) return;
     setActiveChatId(chatId);
     setIsSidebarOpen(false);
+    setErrorMessage(null);
 
     try {
       const res = await fetch(`/api/chats/${chatId}/messages`);
-      const data = await res.json();
-      if (data.messages) {
+      const data = await res.json().catch(() => ({}));
+      if (data.messages && Array.isArray(data.messages)) {
         setMessages(
-          data.messages.map((message: { id: string; role: string; content: string }) => ({
-            id: message.id,
-            role: message.role,
-            content: message.content,
+          data.messages.map((m: { id: string; role: string; content: string }) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
           }))
         );
+      } else {
+        setMessages([]);
       }
     } catch (err) {
-      console.error("Gagal memuat histori pesan:", err);
+      console.warn("Gagal memuat histori pesan:", err);
       setMessages([]);
     }
   };
@@ -134,45 +153,49 @@ export default function ChatPage() {
     if (!confirm("Hapus percakapan ini secara permanen?")) return;
 
     try {
-      await fetch(`/api/chats?id=${chatId}`, { method: "DELETE" });
+      await fetch(`/api/chats?id=${chatId}`, { method: "DELETE" }).catch(() => {});
       setChats((prev) => prev.filter((chat) => chat.id !== chatId));
       if (activeChatId === chatId) {
         setActiveChatId(null);
         setMessages([]);
       }
     } catch (err) {
-      console.error("Gagal menghapus chat:", err);
+      console.warn("Gagal menghapus chat:", err);
     }
   };
 
   const handleSendPreset = (presetText: string) => {
     setInput(presetText);
+    setErrorMessage(null);
   };
 
   const handleChatSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!input.trim() || isLoading || isSubmittingRef.current) return;
+    const prompt = input.trim();
+    if (!prompt || isLoading || isSubmittingRef.current) return;
+
+    setErrorMessage(null);
 
     if (activeChatId) {
-      handleSubmit(event);
+      handleSubmit(event, {
+        body: { chatId: activeChatId, userId: "user_default_01" },
+      });
       return;
     }
 
-    const prompt = input;
+    // Buat sesi baru secara otomatis bila belum ada chat aktif
+    setInput("");
     isSubmittingRef.current = true;
     void (async () => {
       try {
         const chatId = await handleNewChat();
-        if (!chatId) return;
-
-        const response = append(
+        const currentChatId = chatId || crypto.randomUUID();
+        await append(
           { role: "user", content: prompt },
-          { body: { chatId, userId: "user_default_01" } }
+          { body: { chatId: currentChatId, userId: "user_default_01" } }
         );
-        await response;
       } catch (err) {
-        console.error("Gagal mengirim pesan:", err);
-        alert("Pesan gagal dikirim. Silakan coba lagi.");
+        console.error("Gagal mengirim prompt:", err);
       } finally {
         isSubmittingRef.current = false;
       }
@@ -235,6 +258,8 @@ export default function ChatPage() {
           isLoading={isLoading}
           onSendPreset={handleSendPreset}
           onReload={reload}
+          errorMessage={errorMessage}
+          onDismissError={() => setErrorMessage(null)}
         />
 
         <ChatInput

@@ -32,6 +32,7 @@ export function ChatInput({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       if (input.trim() && !isLoading) {
         const form = textareaRef.current?.form;
@@ -42,10 +43,7 @@ export function ChatInput({
 
   return (
     <div className="composer-wrap">
-      <form
-        onSubmit={handleSubmit}
-        className="composer-card"
-      >
+      <form onSubmit={handleSubmit} className="composer-card">
         <textarea
           ref={textareaRef}
           value={input}

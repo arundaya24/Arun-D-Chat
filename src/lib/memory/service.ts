@@ -1,6 +1,6 @@
 import { generateText } from "ai";
-import { getFastModel, generateEmbedding } from "@/lib/ai/provider";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getFastModel, generateEmbedding, isAIConfigured } from "@/lib/ai/provider";
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { MemoryItem } from "@/types";
 
 export const BASE_SYSTEM_PROMPT =
@@ -30,6 +30,7 @@ export async function retrieveRelevantMemories(
   threshold: number = 0.55,
   limit: number = 5
 ): Promise<MemoryItem[]> {
+  if (!isSupabaseConfigured() || !isAIConfigured()) return [];
   const supabase = getSupabaseAdmin();
   if (!supabase) return [];
 
@@ -44,13 +45,13 @@ export async function retrieveRelevantMemories(
     });
 
     if (error) {
-      console.error("Gagal mengambil memori relevan dari Supabase RPC:", error);
+      console.warn("Pencarian memori Supabase dilewati:", error.message);
       return [];
     }
 
     return (data as MemoryItem[]) || [];
   } catch (err) {
-    console.error("Kesalahan pada retrieveRelevantMemories:", err);
+    console.warn("Kesalahan pada retrieveRelevantMemories:", err);
     return [];
   }
 }
@@ -60,6 +61,7 @@ export async function extractAndSaveMemories(
   assistantResponse: string,
   userId: string = "user_default_01"
 ): Promise<void> {
+  if (!isSupabaseConfigured() || !isAIConfigured()) return;
   const supabase = getSupabaseAdmin();
   if (!supabase) return;
 
@@ -128,7 +130,7 @@ Hasil JSON:`;
       });
     }
   } catch (err) {
-    console.error("Kesalahan background task extractAndSaveMemories:", err);
+    console.warn("Latar belakang ekstraksi memori dilewati:", err);
   }
 }
 
@@ -136,6 +138,7 @@ export async function generateChatTitle(
   firstMessage: string,
   chatId: string
 ): Promise<string> {
+  if (!isSupabaseConfigured() || !isAIConfigured()) return "Percakapan Baru";
   const supabase = getSupabaseAdmin();
   if (!supabase) return "Percakapan Baru";
 
@@ -149,7 +152,8 @@ Judul:`,
       temperature: 0.3,
     });
 
-    const title = text.replace(/["'\n\r]/g, "").trim().slice(0, 40) || "Percakapan Baru";
+    const title =
+      text.replace(/["'\n\r]/g, "").trim().slice(0, 40) || "Percakapan Baru";
 
     await supabase
       .from("chats")
@@ -158,7 +162,7 @@ Judul:`,
 
     return title;
   } catch (err) {
-    console.error("Gagal membuat judul otomatis:", err);
+    console.warn("Latar belakang judul chat dilewati:", err);
     return "Percakapan Baru";
   }
 }

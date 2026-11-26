@@ -20,6 +20,8 @@ interface ChatAreaProps {
   isLoading: boolean;
   onSendPreset: (text: string) => void;
   onReload: () => void;
+  errorMessage?: string | null;
+  onDismissError?: () => void;
 }
 
 export function ChatArea({
@@ -27,15 +29,56 @@ export function ChatArea({
   isLoading,
   onSendPreset,
   onReload,
+  errorMessage,
+  onDismissError,
 }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, errorMessage]);
 
   return (
     <div className="chat-scroll">
+      {errorMessage && (
+        <div
+          role="alert"
+          style={{
+            maxWidth: "850px",
+            margin: "0 auto 16px",
+            padding: "12px 16px",
+            borderRadius: "10px",
+            background: "rgba(228, 134, 123, 0.12)",
+            border: "1px solid rgba(228, 134, 123, 0.3)",
+            color: "#fca5a5",
+            fontSize: "13px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+          }}
+        >
+          <span>{errorMessage}</span>
+          {onDismissError && (
+            <button
+              type="button"
+              onClick={onDismissError}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#fca5a5",
+                cursor: "pointer",
+                fontSize: "12px",
+                textDecoration: "underline",
+                flexShrink: 0,
+              }}
+            >
+              Tutup
+            </button>
+          )}
+        </div>
+      )}
+
       {messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
       ) : (
@@ -50,31 +93,35 @@ export function ChatArea({
                 <div className={`message-mark${isUser ? "" : " is-assistant"}`}>
                   {isUser ? <User size={15} /> : <Sparkles size={15} />}
                 </div>
+
                 <div className="message-main">
                   <div className="message-author">
-                    {isUser ? "Anda" : "Arun-D'Chat"}
+                    <span>{isUser ? "Anda" : "Arun-D'Chat"}</span>
                   </div>
-                  {isUser ? (
-                    <div className="message-content is-user">
-                      {message.content}
-                    </div>
-                  ) : (
-                    <div className="message-content">
+
+                  <div className={`message-content${isUser ? " is-user" : ""}`}>
+                    {isUser ? (
+                      message.content
+                    ) : (
                       <MarkdownRenderer content={message.content} />
-                      <div className="message-actions">
-                        <CopyMessageButton content={message.content} />
-                        {isLastAssistant && !isLoading && (
-                          <button
-                            type="button"
-                            onClick={onReload}
-                            className="regenerate-button"
-                            title="Regenerate respon"
-                          >
-                            <RotateCcw size={14} />
-                            <span>Regenerasi</span>
-                          </button>
-                        )}
-                      </div>
+                    )}
+                  </div>
+
+                  {!isUser && (
+                    <div className="message-actions">
+                      <CopyMessageButton content={message.content} />
+                      {isLastAssistant && !isLoading && (
+                        <button
+                          type="button"
+                          onClick={onReload}
+                          className="regenerate-button"
+                          title="Regenerasi respon"
+                          aria-label="Regenerasi respon"
+                        >
+                          <RotateCcw size={13} />
+                          <span>Regenerasi</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -88,14 +135,16 @@ export function ChatArea({
                 <Sparkles size={15} />
               </div>
               <div className="message-main">
-                <div className="message-author">Arun-D'Chat</div>
+                <div className="message-author">
+                  <span>Arun-D'Chat</span>
+                </div>
                 <div className="typing-indicator">
-                  <span className="typing-bars">
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                  <span>Menganalisis memori &amp; menyusun penalaran...</span>
+                  <div className="typing-bars" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <span>Sedang memproses respon...</span>
                 </div>
               </div>
             </div>
@@ -117,7 +166,7 @@ function CopyMessageButton({ content }: { content: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error(err);
+      console.error("Gagal menyalin pesan:", err);
     }
   };
 
@@ -126,16 +175,17 @@ function CopyMessageButton({ content }: { content: string }) {
       type="button"
       onClick={handleCopy}
       className="copy-message-button"
-      title="Salin seluruh pesan"
+      title="Salin pesan"
+      aria-label="Salin pesan"
     >
       {copied ? (
         <>
-          <Check size={14} />
+          <Check size={13} />
           <span>Tersalin</span>
         </>
       ) : (
         <>
-          <Copy size={14} />
+          <Copy size={13} />
           <span>Salin</span>
         </>
       )}
@@ -150,30 +200,30 @@ function EmptyStateScreen({
 }) {
   const presets = [
     {
-      title: "Arsitektur Full-Stack Modern",
-      desc: "Jelaskan strategi microservices vs monolith untuk startup.",
-      icon: <BrainCircuit className="w-5 h-5 text-emerald-400" />,
+      title: "Arsitektur Full-Stack",
+      desc: "Bandingkan arsitektur monolithic modular vs microservices untuk aplikasi skala menengah.",
+      icon: <BrainCircuit size={16} className="suggestion-icon" />,
       prompt:
         "Bandingkan arsitektur monolithic modular vs microservices untuk aplikasi skala menengah dengan penalaran terstruktur.",
     },
     {
-      title: "Debugging & Refactoring Kode",
-      desc: "Optimalkan fungsi async & penanganan error pada Next.js API.",
-      icon: <Code2 className="w-5 h-5 text-teal-400" />,
+      title: "Optimasi & Error Handling",
+      desc: "Best practice error handling dan streaming response pada Next.js 14 App Router.",
+      icon: <Code2 size={16} className="suggestion-icon" />,
       prompt:
         "Tunjukkan best practice error handling dan streaming response pada Next.js 14 App Router API route.",
     },
     {
-      title: "Uji Memori Jangka Panjang",
-      desc: "Beri tahu preferensi kerjamu untuk diingat AI secara permanen.",
-      icon: <Zap className="w-5 h-5 text-amber-400" />,
+      title: "Memori & Preferensi",
+      desc: "Uji fitur self-learning RAG dengan memberikan preferensi kerja atau profil Anda.",
+      icon: <Zap size={16} className="suggestion-icon" />,
       prompt:
-        "Perkenalkan dirimu dan beri tahu AI: 'Saya adalah Senior Developer yang fokus pada TypeScript dan Clean Architecture. Ingat ini untuk sesi-sesi berikutnya.'",
+        "Saya adalah software engineer yang fokus pada TypeScript dan Clean Architecture. Ingat ini untuk referensi berikutnya.",
     },
     {
-      title: "Penalaran Kritis & Logika",
-      desc: "Analisis trade-off teknologi database vektor (pgvector vs Pinecone).",
-      icon: <ShieldCheck className="w-5 h-5 text-indigo-400" />,
+      title: "Analisis Database Vektor",
+      desc: "Bandingkan pgvector (PostgreSQL) vs Pinecone untuk AI memory.",
+      icon: <ShieldCheck size={16} className="suggestion-icon" />,
       prompt:
         "Analisis komparatif yang objektif antara pgvector (Supabase/PostgreSQL) vs Pinecone untuk AI application memory.",
     },
@@ -181,15 +231,15 @@ function EmptyStateScreen({
 
   return (
     <div className="empty-state">
-      <div className="empty-mark">
-        <Sparkles size={19} />
+      <div className="empty-mark" aria-hidden="true">
+        <Sparkles size={18} />
       </div>
 
       <h1 className="empty-heading">
-        Bagaimana saya bisa membantu Anda hari ini?
+        Apa yang ingin Anda selesaikan hari ini?
       </h1>
       <p className="empty-description">
-        Dilengkapi dengan penalaran objektif, Vercel AI SDK, serta memori jangka panjang cerdas (pgvector RAG) yang terus belajar.
+        Didukung penalaran logis terstruktur, streaming teks real-time, dan sistem memori jangka panjang otomatis.
       </p>
 
       <div className="suggestion-grid">
@@ -201,8 +251,8 @@ function EmptyStateScreen({
             className="suggestion-card"
           >
             <div className="suggestion-topline">
-              <span className="suggestion-icon">{item.icon}</span>
               <span className="suggestion-title">{item.title}</span>
+              {item.icon}
             </div>
             <p className="suggestion-description">{item.desc}</p>
           </button>

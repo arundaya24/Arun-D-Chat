@@ -8,6 +8,22 @@ export function getAIProvider(): AIProvider {
   return provider === "openai" ? "openai" : "google";
 }
 
+export function isAIConfigured(): boolean {
+  const provider = getAIProvider();
+  if (provider === "openai") {
+    const key = process.env.OPENAI_API_KEY;
+    return Boolean(
+      key && !key.includes("your_openai_api_key") && key.trim().length > 10
+    );
+  }
+  const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  return Boolean(
+    key &&
+      !key.includes("your_google_gemini_api_key") &&
+      key.trim().length > 10
+  );
+}
+
 export function getChatModel() {
   const provider = getAIProvider();
 

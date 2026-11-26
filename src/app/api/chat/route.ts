@@ -1,15 +1,22 @@
 import { streamText } from "ai";
-import { getChatModel } from "@/lib/ai/provider";
+import { getChatModel, getAIProvider, isAIConfigured } from "@/lib/ai/provider";
 import {
   retrieveRelevantMemories,
   buildAugmentedSystemPrompt,
   extractAndSaveMemories,
   generateChatTitle,
 } from "@/lib/memory/service";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUUID(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
 
 export async function POST(req: Request) {
   try {
@@ -18,9 +25,24 @@ export async function POST(req: Request) {
     if (!rateCheck.allowed) {
       return new Response(
         JSON.stringify({
-          error: "Terlalu banyak permintaan (Rate limit exceeded). Silakan tunggu sebentar.",
+          error:
+            "Terlalu banyak permintaan (Rate limit exceeded). Silakan tunggu sebentar.",
         }),
         { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isAIConfigured()) {
+      const provider = getAIProvider();
+      const keyName =
+        provider === "openai"
+          ? "OPENAI_API_KEY"
+          : "GOOGLE_GENERATIVE_AI_API_KEY";
+      return new Response(
+        JSON.stringify({
+          error: `API Key belum dikonfigurasi. Silakan tambahkan ${keyName} di file .env.local untuk mulai mengobrol.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -38,9 +60,7 @@ export async function POST(req: Request) {
     const userPrompt = lastMessage.content || "";
 
     const relevantMemories = await retrieveRelevantMemories(userPrompt, userId);
-
     const systemPrompt = buildAugmentedSystemPrompt(relevantMemories);
-
     const model = getChatModel();
 
     const result = await streamText({
@@ -49,38 +69,42 @@ export async function POST(req: Request) {
       messages,
       temperature: 0.7,
       async onFinish({ text }) {
-        const supabase = getSupabaseAdmin();
-        if (supabase && chatId) {
-          try {
-            await supabase.from("messages").insert([
-              { chat_id: chatId, role: "user", content: userPrompt },
-              { chat_id: chatId, role: "assistant", content: text },
-            ]);
+        if (isSupabaseConfigured() && chatId && isValidUUID(chatId)) {
+          const supabase = getSupabaseAdmin();
+          if (supabase) {
+            try {
+              await supabase.from("messages").insert([
+                { chat_id: chatId, role: "user", content: userPrompt },
+                { chat_id: chatId, role: "assistant", content: text },
+              ]);
 
-            await supabase
-              .from("chats")
-              .update({ updated_at: new Date().toISOString() })
-              .eq("id", chatId);
+              await supabase
+                .from("chats")
+                .update({ updated_at: new Date().toISOString() })
+                .eq("id", chatId);
 
-            const { data: chatData } = await supabase
-              .from("chats")
-              .select("title")
-              .eq("id", chatId)
-              .single();
+              const { data: chatData } = await supabase
+                .from("chats")
+                .select("title")
+                .eq("id", chatId)
+                .maybeSingle();
 
-            if (chatData && chatData.title === "Percakapan Baru") {
-              generateChatTitle(userPrompt, chatId).catch((err) =>
-                console.error("Gagal generate title di background:", err)
-              );
+              if (chatData && chatData.title === "Percakapan Baru") {
+                generateChatTitle(userPrompt, chatId).catch((err) =>
+                  console.warn("Gagal membuat judul obrolan:", err)
+                );
+              }
+            } catch (dbErr) {
+              console.warn("Penyimpanan riwayat chat dilewati:", dbErr);
             }
-          } catch (dbErr) {
-            console.error("Gagal menyimpan pesan ke database:", dbErr);
           }
         }
 
-        extractAndSaveMemories(userPrompt, text, userId).catch((memErr) =>
-          console.error("Gagal ekstraksi memori di background:", memErr)
-        );
+        if (isSupabaseConfigured() && isAIConfigured()) {
+          extractAndSaveMemories(userPrompt, text, userId).catch((memErr) =>
+            console.warn("Ekstraksi memori latar belakang dilewati:", memErr)
+          );
+        }
       },
     });
 
