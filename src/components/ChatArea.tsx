@@ -97,7 +97,10 @@ export function ChatArea({
               !isUser && index === messages.length - 1;
 
             return (
-              <div key={message.id || index} className="message-row">
+              <div
+                key={message.id || index}
+                className={`message-row${isUser ? " is-user" : " is-assistant"}`}
+              >
                 <div className={`message-mark${isUser ? "" : " is-assistant"}`}>
                   {isUser ? <User size={15} /> : <Sparkles size={15} />}
                 </div>
@@ -138,7 +141,7 @@ export function ChatArea({
           })}
 
           {isLoading && (
-            <div className="message-row">
+            <div className="message-row is-assistant">
               <div className="message-mark is-assistant">
                 <Sparkles size={15} />
               </div>

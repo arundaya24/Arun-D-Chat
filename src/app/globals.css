@@ -467,17 +467,28 @@ textarea:focus-visible {
 }
 
 .message-row {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  display: flex;
+  align-items: flex-start;
   gap: 14px;
   padding: 24px 0;
   border-bottom: 1px solid rgb(42 48 44 / 64%);
+}
+
+.message-row.is-assistant {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.message-row.is-user {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
 .message-mark {
   display: grid;
   width: 30px;
   height: 30px;
+  flex: 0 0 30px;
   place-items: center;
   border: 1px solid var(--color-border);
   border-radius: 9px;
@@ -495,12 +506,27 @@ textarea:focus-visible {
   min-width: 0;
 }
 
+.message-row.is-assistant .message-main {
+  flex: 1;
+}
+
+.message-row.is-user .message-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: min(85%, 680px);
+}
+
 .message-author {
   gap: 8px;
   margin: 1px 0 9px;
   color: var(--color-muted);
   font-size: 11px;
   font-weight: 540;
+}
+
+.message-row.is-user .message-author {
+  justify-content: flex-end;
 }
 
 .message-content {
@@ -513,11 +539,11 @@ textarea:focus-visible {
 
 .message-content.is-user {
   width: fit-content;
-  max-width: min(100%, 720px);
-  padding: 10px 13px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-surface);
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--color-surface-raised);
   white-space: pre-wrap;
 }
 
@@ -1169,13 +1195,18 @@ textarea:focus-visible {
   }
 
   .message-row {
-    grid-template-columns: 26px minmax(0, 1fr);
     gap: 10px;
+    padding: 16px 0;
   }
 
   .message-mark {
     width: 26px;
     height: 26px;
+    flex: 0 0 26px;
+  }
+
+  .message-row.is-user .message-main {
+    max-width: calc(100% - 36px);
   }
 }
 
