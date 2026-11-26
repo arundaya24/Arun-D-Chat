@@ -19,8 +19,8 @@ export function isAIConfigured(): boolean {
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   return Boolean(
     key &&
-      !key.includes("your_google_gemini_api_key") &&
-      key.trim().length > 10
+    !key.includes("your_google_gemini_api_key") &&
+    key.trim().length > 10
   );
 }
 
