@@ -9,12 +9,12 @@ export async function GET(_req: Request, { params }: RouteParams) {
   const { id } = params;
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ chat: null }, { status: 404 });
+    return NextResponse.json({ chat: null });
   }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
-    return NextResponse.json({ chat: null }, { status: 404 });
+    return NextResponse.json({ chat: null });
   }
 
   const { data, error } = await supabase
@@ -24,7 +24,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     .maybeSingle();
 
   if (error || !data) {
-    return NextResponse.json({ chat: null }, { status: 404 });
+    return NextResponse.json({ chat: null });
   }
 
   return NextResponse.json({ chat: data });
