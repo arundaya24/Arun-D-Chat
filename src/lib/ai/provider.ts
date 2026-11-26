@@ -75,7 +75,12 @@ export function getEmbeddingModel() {
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
   });
   const modelName = process.env.EMBEDDING_MODEL || "gemini-embedding-001";
-  return google.textEmbeddingModel(modelName);
+  const outputDimensionality = process.env.EMBEDDING_DIMENSIONS
+    ? parseInt(process.env.EMBEDDING_DIMENSIONS, 10)
+    : 768;
+  return google.textEmbeddingModel(modelName, {
+    outputDimensionality,
+  });
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
