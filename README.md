@@ -23,6 +23,7 @@ Arsitektur aplikasi dirancang modular agar provider model AI dapat diganti antar
 - **Streaming Respon Real-Time**: Respon teks mengalir bertahap menggunakan protokol data stream dari Vercel AI SDK.
 - **Tata Letak Percakapan Asimetris**: Pesan pengguna berada di sisi kanan dengan bubble yang menyesuaikan panjang teks, sedangkan respon AI berada di sisi kiri dengan ruang baca penuh.
 - **Memori Jangka Panjang Otomatis (Self-Learning)**: Setiap putaran percakapan dianalisis oleh model ringan di latar belakang (*background task*). Fakta penting atau preferensi pengguna diekstraksi, dibuat representasi vektornya, dan disimpan ke database vektor setelah melalui proses deduplikasi.
+- **Kesadaran Temporal & Sistem Real-Time**: Akses dinamis ke zona waktu lokal pengguna (misal: `Asia/Jakarta`), nama hari saat ini (Senin - Minggu), tanggal & jam lokal presisi, serta identifikasi sistem operasi perangkat. AI memiliki kesadaran waktu nyata tanpa batas cutoff pengetahuan.
 - **Context Retrieval (RAG)**: Sebelum AI menyusun jawaban, sistem mencari potongan memori terdahulu yang paling relevan melalui pencarian *cosine similarity* dan menyuntikkannya ke dalam *system prompt*.
 - **System Prompt Anti-Halusinasi**: Instruksi sistem dikonfigurasi agar AI memberikan jawaban yang logis, objektif, terstruktur, langsung ke inti permasalahan, dan mengakui batasan jika informasi tidak pasti.
 - **Sidebar Riwayat Percakapan**: Navigasi riwayat chat dengan dukungan pembuatan sesi baru, penghapusan sesi, dan penamaan judul chat otomatis dari pesan pertama.
