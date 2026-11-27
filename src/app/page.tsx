@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useChat } from "ai/react";
+import { Message } from "ai";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
@@ -32,6 +33,7 @@ export default function ChatPage() {
   const activeChatIdRef = useRef<string | null>(null);
   const loadingChatIdRef = useRef<string | null>(null);
   const selectChatAbortControllerRef = useRef<AbortController | null>(null);
+  const messagesCacheRef = useRef<Map<string, Message[]>>(new Map());
 
   useEffect(() => {
     activeChatIdRef.current = activeChatId;
@@ -123,6 +125,12 @@ export default function ChatPage() {
     },
   });
 
+  useEffect(() => {
+    if (activeChatId && messages.length > 0) {
+      messagesCacheRef.current.set(activeChatId, messages);
+    }
+  }, [activeChatId, messages]);
+
   const handleSelectChat = useCallback(
     async (chatId: string) => {
       if (chatId === activeChatIdRef.current && !isMessagesLoading) return;
@@ -137,13 +145,21 @@ export default function ChatPage() {
 
       loadingChatIdRef.current = chatId;
       setActiveChatId(chatId);
-      setIsMessagesLoading(true);
       setIsSidebarOpen(false);
       setErrorMessage(null);
 
       try {
         localStorage.setItem("arun_active_chat_id", chatId);
       } catch {}
+
+      const cached = messagesCacheRef.current.get(chatId);
+      if (cached && cached.length > 0) {
+        setMessages(cached);
+        setIsMessagesLoading(false);
+      } else {
+        setMessages([]);
+        setIsMessagesLoading(true);
+      }
 
       const controller = new AbortController();
       selectChatAbortControllerRef.current = controller;
@@ -156,16 +172,17 @@ export default function ChatPage() {
 
         if (loadingChatIdRef.current === chatId) {
           if (data.messages && Array.isArray(data.messages)) {
-            setMessages(
-              data.messages.map(
-                (m: { id: string; role: string; content: string }) => ({
-                  id: m.id,
-                  role: m.role as "user" | "assistant" | "system",
-                  content: m.content,
-                })
-              )
+            const formatted: Message[] = data.messages.map(
+              (m: { id: string; role: string; content: string }) => ({
+                id: m.id,
+                role: m.role as "user" | "assistant" | "system",
+                content: m.content,
+              })
             );
+            messagesCacheRef.current.set(chatId, formatted);
+            setMessages(formatted);
           } else {
+            messagesCacheRef.current.set(chatId, []);
             setMessages([]);
           }
         }
@@ -173,7 +190,9 @@ export default function ChatPage() {
         if (err.name !== "AbortError") {
           console.warn("Gagal memuat histori pesan:", err);
           if (loadingChatIdRef.current === chatId) {
-            setMessages([]);
+            if (!cached || cached.length === 0) {
+              setMessages([]);
+            }
           }
         }
       } finally {
@@ -256,6 +275,8 @@ export default function ChatPage() {
 
   const handleDeleteChat = async (chatId: string) => {
     if (!confirm("Hapus percakapan ini secara permanen?")) return;
+
+    messagesCacheRef.current.delete(chatId);
 
     if (activeChatId === chatId) {
       handleNewChat();

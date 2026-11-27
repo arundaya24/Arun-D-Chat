@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { Message } from "ai";
 import {
   Sparkles,
@@ -41,39 +41,75 @@ export function ChatArea({
   const isNearBottomRef = useRef(true);
   const prevMessagesLengthRef = useRef(messages.length);
   const prevActiveChatIdRef = useRef<string | null>(activeChatId || null);
+  const isSwitchingChatRef = useRef(false);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+    isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
   };
 
-  useEffect(() => {
-    if (activeChatId !== prevActiveChatIdRef.current) {
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const chatChanged = activeChatId !== prevActiveChatIdRef.current;
+    if (chatChanged) {
       prevActiveChatIdRef.current = activeChatId || null;
-      if (!isMessagesLoading && scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-      }
+      isSwitchingChatRef.current = true;
     }
-  }, [activeChatId, isMessagesLoading]);
+
+    if (isMessagesLoading) {
+      return;
+    }
+
+    if (chatChanged || isSwitchingChatRef.current) {
+      container.scrollTop = container.scrollHeight;
+      prevMessagesLengthRef.current = messages.length;
+      isNearBottomRef.current = true;
+
+      const rafId = requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+        isSwitchingChatRef.current = false;
+      });
+
+      return () => cancelAnimationFrame(rafId);
+    }
+  }, [activeChatId, isMessagesLoading, messages.length]);
 
   useEffect(() => {
-    if (!isMessagesLoading && messages.length > 0 && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-    }
-  }, [isMessagesLoading]);
+    if (isMessagesLoading || isSwitchingChatRef.current) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-  useEffect(() => {
-    if (isMessagesLoading) return;
     const isNewMessage = messages.length > prevMessagesLengthRef.current;
     prevMessagesLengthRef.current = messages.length;
 
     if (isNewMessage) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else if (isLoading && isNearBottomRef.current && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    } else if (isLoading && isNearBottomRef.current) {
+      container.scrollTop = container.scrollHeight;
     }
   }, [messages, isLoading, isMessagesLoading]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const stack = container.querySelector(".message-stack");
+    if (!stack) return;
+
+    const observer = new ResizeObserver(() => {
+      if (isSwitchingChatRef.current || (isNearBottomRef.current && isLoading)) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+
+    observer.observe(stack);
+    return () => observer.disconnect();
+  }, [activeChatId, isMessagesLoading, isLoading]);
 
   return (
     <div
@@ -96,34 +132,15 @@ export function ChatArea({
         </div>
       )}
 
-      {isMessagesLoading ? (
-        <div className="message-stack py-6 space-y-6">
-          <div className="message-row is-user opacity-35">
-            <div className="message-mark">
-              <User size={15} />
-            </div>
-            <div className="message-main">
-              <div className="h-3.5 bg-neutral-300 dark:bg-neutral-700 rounded w-16 mb-2 animate-pulse" />
-              <div className="h-9 bg-neutral-200 dark:bg-neutral-800 rounded-lg w-2/3 animate-pulse" />
-            </div>
-          </div>
-          <div className="message-row is-assistant opacity-35">
-            <div className="message-mark is-assistant">
-              <Sparkles size={15} />
-            </div>
-            <div className="message-main">
-              <div className="h-3.5 bg-neutral-300 dark:bg-neutral-700 rounded w-24 mb-2 animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-4/5 animate-pulse" />
-                <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/5 animate-pulse" />
-              </div>
-            </div>
-          </div>
+      {messages.length === 0 && isMessagesLoading ? (
+        <div className="chat-loading-placeholder">
+          <div className="chat-loading-spinner" />
+          <span className="chat-loading-text">Memuat percakapan...</span>
         </div>
       ) : messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
       ) : (
-        <div key={activeChatId || "empty-session"} className="message-stack">
+        <div className="message-stack">
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const isLastAssistant =
