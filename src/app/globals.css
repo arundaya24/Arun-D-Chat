@@ -1048,7 +1048,7 @@ textarea:focus-visible {
 }
 
 .markdown-body a:hover {
-  color: #b6e5d4;
+  color: var(--color-accent);
 }
 
 .markdown-body blockquote {
@@ -1271,7 +1271,6 @@ html.light .hljs-name {
   }
 }
 
-/* Tactile button feedback */
 .active\:scale-95:active,
 button.active-tactile:active {
   transform: scale(0.95);
