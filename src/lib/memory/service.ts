@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { getFastModel, generateEmbedding, isAIConfigured } from "@/lib/ai/provider";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
+import { localMemoriesStore } from "@/lib/memory/store";
 import { MemoryItem } from "@/types";
 
 export const BASE_SYSTEM_PROMPT =
@@ -30,7 +31,34 @@ export async function retrieveRelevantMemories(
   threshold: number = 0.55,
   limit: number = 5
 ): Promise<MemoryItem[]> {
-  if (!isSupabaseConfigured() || !isAIConfigured()) return [];
+  if (!isAIConfigured()) return [];
+
+  if (!isSupabaseConfigured()) {
+    const local = localMemoriesStore.getMemories(userId);
+    if (local.length === 0) return [];
+
+    const queryTokens = query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 2);
+
+    if (queryTokens.length === 0) return local.slice(0, limit);
+
+    return local
+      .map((m) => {
+        const contentLower = m.content.toLowerCase();
+        const score = queryTokens.reduce(
+          (acc, token) => (contentLower.includes(token) ? acc + 1 : acc),
+          0
+        );
+        return { item: m, score };
+      })
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map((entry) => entry.item);
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return [];
 
@@ -61,9 +89,7 @@ export async function extractAndSaveMemories(
   assistantResponse: string,
   userId: string = "user_default_01"
 ): Promise<void> {
-  if (!isSupabaseConfigured() || !isAIConfigured()) return;
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return;
+  if (!isAIConfigured()) return;
 
   try {
     const fastModel = getFastModel();
@@ -103,6 +129,24 @@ Hasil JSON:`;
     for (const item of extracted) {
       if (!item.content || item.content.length < 5) continue;
 
+      const category = ["preference", "fact", "profile", "goal", "work"].includes(
+        item.category
+      )
+        ? (item.category as any)
+        : "general";
+
+      if (!isSupabaseConfigured()) {
+        localMemoriesStore.addMemory({
+          user_id: userId,
+          content: item.content,
+          category,
+        });
+        continue;
+      }
+
+      const supabase = getSupabaseAdmin();
+      if (!supabase) continue;
+
       const newEmbedding = await generateEmbedding(item.content);
 
       const { data: existingSimilar } = await supabase.rpc("match_memories", {
@@ -116,16 +160,10 @@ Hasil JSON:`;
         continue;
       }
 
-      const category = ["preference", "fact", "profile", "goal", "work"].includes(
-        item.category
-      )
-        ? item.category
-        : "general";
-
       await supabase.from("memories").insert({
         user_id: userId,
         content: item.content,
-        category: category,
+        category,
         embedding: newEmbedding,
       });
     }

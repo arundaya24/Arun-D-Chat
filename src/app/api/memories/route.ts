@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { generateEmbedding, isAIConfigured } from "@/lib/ai/provider";
+import { localMemoriesStore } from "@/lib/memory/store";
 
 export async function GET(req: Request) {
   try {
@@ -8,12 +9,18 @@ export async function GET(req: Request) {
     const userId = searchParams.get("userId") || "user_default_01";
 
     if (!isSupabaseConfigured()) {
-      return NextResponse.json({ memories: [] });
+      return NextResponse.json({
+        memories: localMemoriesStore.getMemories(userId),
+        storage: "local",
+      });
     }
 
     const supabase = getSupabaseAdmin();
     if (!supabase) {
-      return NextResponse.json({ memories: [] });
+      return NextResponse.json({
+        memories: localMemoriesStore.getMemories(userId),
+        storage: "local",
+      });
     }
 
     const { data, error } = await supabase
@@ -23,14 +30,22 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.warn("Gagal membaca memori dari Supabase:", error.message);
-      return NextResponse.json({ memories: [] });
+      console.warn("Gagal membaca memori dari Supabase, beralih ke lokal:", error.message);
+      return NextResponse.json({
+        memories: localMemoriesStore.getMemories(userId),
+        storage: "local",
+      });
     }
 
-    return NextResponse.json({ memories: data || [] });
+    return NextResponse.json({ memories: data || [], storage: "supabase" });
   } catch (err: any) {
     console.warn("Peringatan pada GET /api/memories:", err.message);
-    return NextResponse.json({ memories: [] });
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId") || "user_default_01";
+    return NextResponse.json({
+      memories: localMemoriesStore.getMemories(userId),
+      storage: "local",
+    });
   }
 }
 
@@ -46,42 +61,52 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!isSupabaseConfigured() || !isAIConfigured()) {
-      return NextResponse.json(
-        {
-          error:
-            "Database Supabase atau AI API Key belum dikonfigurasi di .env.local untuk menyimpan memori permanen.",
-        },
-        { status: 400 }
-      );
+    const validCategories = ["preference", "fact", "profile", "goal", "work", "general"] as const;
+    const resolvedCategory = validCategories.includes(category as any) ? category : "general";
+
+    // Mode Supabase terhubung
+    if (isSupabaseConfigured() && isAIConfigured()) {
+      const supabase = getSupabaseAdmin();
+      if (supabase) {
+        try {
+          const embedding = await generateEmbedding(content.trim());
+
+          const { data, error } = await supabase
+            .from("memories")
+            .insert({
+              user_id: userId,
+              content: content.trim(),
+              category: resolvedCategory,
+              embedding,
+            })
+            .select()
+            .single();
+
+          if (!error && data) {
+            return NextResponse.json({ memory: data, storage: "supabase" }, { status: 201 });
+          }
+          console.warn("Gagal menyimpan ke Supabase, menyimpan ke fallback lokal:", error?.message);
+        } catch (dbErr: any) {
+          console.warn("Error saat embedding/insert Supabase:", dbErr.message);
+        }
+      }
     }
 
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: "Koneksi database tidak tersedia." },
-        { status: 503 }
-      );
-    }
+    // Fallback mode lokal (in-memory) saat Supabase belum dikonfigurasi
+    const localMemory = localMemoriesStore.addMemory({
+      user_id: userId,
+      content: content.trim(),
+      category: resolvedCategory,
+    });
 
-    const embedding = await generateEmbedding(content.trim());
-
-    const { data, error } = await supabase
-      .from("memories")
-      .insert({
-        user_id: userId,
-        content: content.trim(),
-        category,
-        embedding,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ memory: data }, { status: 201 });
+    return NextResponse.json(
+      {
+        memory: localMemory,
+        storage: "local",
+        message: "Memori disimpan pada penyimpanan lokal sementara.",
+      },
+      { status: 201 }
+    );
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -99,21 +124,16 @@ export async function DELETE(req: Request) {
       );
     }
 
-    if (!isSupabaseConfigured()) {
-      return NextResponse.json({
-        success: true,
-        message: "Memori berhasil dihapus.",
-      });
-    }
+    localMemoriesStore.deleteMemory(id);
 
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
-      return NextResponse.json({ success: true });
-    }
-
-    const { error } = await supabase.from("memories").delete().eq("id", id);
-    if (error) {
-      console.warn("Gagal menghapus memori dari database:", error.message);
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabaseAdmin();
+      if (supabase) {
+        const { error } = await supabase.from("memories").delete().eq("id", id);
+        if (error) {
+          console.warn("Gagal menghapus memori dari database:", error.message);
+        }
+      }
     }
 
     return NextResponse.json({

@@ -36,6 +36,7 @@ export function MemoryManagerModal({
   const [adding, setAdding] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,6 +52,7 @@ export function MemoryManagerModal({
       if (data.memories) {
         setMemories(data.memories);
       }
+      setIsSupabaseActive(data.storage === "supabase");
     } catch (err) {
       console.error("Gagal memuat memori:", err);
     } finally {
@@ -79,7 +81,12 @@ export function MemoryManagerModal({
         setMemories((prev) => [data.memory, ...prev]);
         setNewContent("");
         setShowAddForm(false);
-        setStatusMessage("Fakta baru berhasil disimpan ke memori vektor.");
+        setIsSupabaseActive(data.storage === "supabase");
+        setStatusMessage(
+          data.storage === "supabase"
+            ? "Fakta baru berhasil disimpan ke database vektor pgvector."
+            : "Fakta baru disimpan pada memori lokal sesi aktif."
+        );
         setTimeout(() => setStatusMessage(null), 3000);
       } else {
         alert(data.error || "Gagal menyimpan data memori");
@@ -136,7 +143,9 @@ export function MemoryManagerModal({
             <div>
               <h2 className="modal-title">
                 <span>Memori Terindeks</span>
-                <span className="modal-tag-badge">pgvector RAG</span>
+                <span className="modal-tag-badge">
+                  {isSupabaseActive ? "pgvector RAG" : "Memori Lokal"}
+                </span>
               </h2>
               <p className="modal-subtitle">
                 Fakta teknis dan preferensi kerja yang diindeks secara otomatis.
@@ -300,7 +309,9 @@ export function MemoryManagerModal({
             Total: {String(memories.length).padStart(2, "0")} entri
           </span>
           <span className="modal-footer-mono">
-            Cosine Distance Matching
+            {isSupabaseActive
+              ? "pgvector Cosine Distance Matching"
+              : "Penyimpanan Memori Lokal Sesi Aktif"}
           </span>
         </footer>
       </div>
