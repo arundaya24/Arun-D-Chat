@@ -11,6 +11,15 @@ export function checkRateLimit(
   windowMs: number = 60 * 1000
 ): { allowed: boolean; remaining: number; reset: number } {
   const now = Date.now();
+
+  if (rateLimitMap.size > 100) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+
   const record = rateLimitMap.get(identifier);
 
   if (!record || now > record.resetTime) {
