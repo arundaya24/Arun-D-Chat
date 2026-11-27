@@ -10,6 +10,7 @@ import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
+import { generateFastTitle } from "@/lib/utils";
 import { Brain, Menu } from "lucide-react";
 
 const ArtisanalCanvas = dynamic(
@@ -21,12 +22,16 @@ export default function ChatPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const isSubmittingRef = useRef(false);
   const activeChatIdRef = useRef<string | null>(null);
+  const loadingChatIdRef = useRef<string | null>(null);
+  const selectChatAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     activeChatIdRef.current = activeChatId;
@@ -120,36 +125,64 @@ export default function ChatPage() {
 
   const handleSelectChat = useCallback(
     async (chatId: string) => {
-      if (chatId === activeChatIdRef.current) return;
+      if (chatId === activeChatIdRef.current && !isMessagesLoading) return;
+
+      if (isLoading) {
+        stop();
+      }
+
+      if (selectChatAbortControllerRef.current) {
+        selectChatAbortControllerRef.current.abort();
+      }
+
+      loadingChatIdRef.current = chatId;
       setActiveChatId(chatId);
+      setIsMessagesLoading(true);
       setIsSidebarOpen(false);
       setErrorMessage(null);
+
       try {
         localStorage.setItem("arun_active_chat_id", chatId);
       } catch {}
 
+      const controller = new AbortController();
+      selectChatAbortControllerRef.current = controller;
+
       try {
-        const res = await fetch(`/api/chats/${chatId}/messages`);
+        const res = await fetch(`/api/chats/${chatId}/messages`, {
+          signal: controller.signal,
+        });
         const data = await res.json().catch(() => ({}));
-        if (data.messages && Array.isArray(data.messages)) {
-          setMessages(
-            data.messages.map(
-              (m: { id: string; role: string; content: string }) => ({
-                id: m.id,
-                role: m.role as "user" | "assistant" | "system",
-                content: m.content,
-              })
-            )
-          );
-        } else {
-          setMessages([]);
+
+        if (loadingChatIdRef.current === chatId) {
+          if (data.messages && Array.isArray(data.messages)) {
+            setMessages(
+              data.messages.map(
+                (m: { id: string; role: string; content: string }) => ({
+                  id: m.id,
+                  role: m.role as "user" | "assistant" | "system",
+                  content: m.content,
+                })
+              )
+            );
+          } else {
+            setMessages([]);
+          }
         }
-      } catch (err) {
-        console.warn("Gagal memuat histori pesan:", err);
-        setMessages([]);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.warn("Gagal memuat histori pesan:", err);
+          if (loadingChatIdRef.current === chatId) {
+            setMessages([]);
+          }
+        }
+      } finally {
+        if (loadingChatIdRef.current === chatId) {
+          setIsMessagesLoading(false);
+        }
       }
     },
-    [setMessages]
+    [isLoading, stop, setMessages, isMessagesLoading]
   );
 
   useEffect(() => {
@@ -178,15 +211,24 @@ export default function ChatPage() {
   }, [loadChats, loadMemoryCount, handleSelectChat]);
 
   const handleNewChat = useCallback(() => {
+    if (isLoading) {
+      stop();
+    }
+    if (selectChatAbortControllerRef.current) {
+      selectChatAbortControllerRef.current.abort();
+    }
+    loadingChatIdRef.current = null;
+    setIsMessagesLoading(false);
     setActiveChatId(null);
     setMessages([]);
     setInput("");
     setErrorMessage(null);
     setIsSidebarOpen(false);
+
     try {
       localStorage.removeItem("arun_active_chat_id");
     } catch {}
-  }, [setMessages, setInput]);
+  }, [isLoading, stop, setMessages, setInput]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -215,6 +257,10 @@ export default function ChatPage() {
   const handleDeleteChat = async (chatId: string) => {
     if (!confirm("Hapus percakapan ini secara permanen?")) return;
 
+    if (activeChatId === chatId) {
+      handleNewChat();
+    }
+
     try {
       await fetch(`/api/chats?id=${chatId}`, { method: "DELETE" }).catch(() => {});
       setChats((prev) => {
@@ -224,9 +270,6 @@ export default function ChatPage() {
         } catch {}
         return updated;
       });
-      if (activeChatId === chatId) {
-        handleNewChat();
-      }
     } catch (err) {
       console.warn("Gagal menghapus chat:", err);
     }
@@ -240,7 +283,7 @@ export default function ChatPage() {
   const handleChatSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const prompt = input.trim();
-    if (!prompt || isLoading || isSubmittingRef.current) return;
+    if (!prompt || isLoading || isSubmittingRef.current || isMessagesLoading) return;
 
     setErrorMessage(null);
     const clientContext = getClientSystemContext();
@@ -258,14 +301,15 @@ export default function ChatPage() {
 
     setInput("");
     isSubmittingRef.current = true;
+
     void (async () => {
       try {
-        const titleExcerpt = prompt.slice(0, 36).trim() || "Percakapan Baru";
+        const fastTitle = generateFastTitle(prompt);
         const res = await fetch("/api/chats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: titleExcerpt,
+            title: fastTitle,
             userId: "user_default_01",
           }),
         });
@@ -273,7 +317,7 @@ export default function ChatPage() {
         const data = await res.json().catch(() => ({}));
         const newChat: ChatSession = data.chat || {
           id: crypto.randomUUID(),
-          title: titleExcerpt,
+          title: fastTitle,
           user_id: "user_default_01",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -308,6 +352,7 @@ export default function ChatPage() {
   };
 
   const handleReload = () => {
+    if (isLoading || !activeChatId) return;
     reload({
       body: {
         chatId: activeChatId,
@@ -373,6 +418,7 @@ export default function ChatPage() {
         <ChatArea
           messages={messages}
           isLoading={isLoading}
+          isMessagesLoading={isMessagesLoading}
           onSendPreset={handleSendPreset}
           errorMessage={errorMessage}
           onDismissError={() => setErrorMessage(null)}

@@ -12,7 +12,9 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import {
   persistChatMessagesPair,
   fetchConversationById,
+  updateConversationTitle,
 } from "@/lib/chat/database";
+import { generateFastTitle } from "@/lib/utils";
 
 export const maxDuration = 60;
 
@@ -71,15 +73,27 @@ export async function POST(req: Request) {
       clientContext,
     } = body;
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    const rawMessages = Array.isArray(messages) ? messages : [];
+    const validMessages = rawMessages
+      .filter((m) => m && (m.role === "user" || m.role === "assistant"))
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: String(m.content || "").trim(),
+      }))
+      .filter((m) => m.content.length > 0);
+
+    if (validMessages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Pesan tidak boleh kosong." }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const lastMessage = messages[messages.length - 1];
-    const userPrompt = lastMessage.content || "";
+    const boundedMessages = validMessages.slice(-14);
+    const lastUserMessage = [...boundedMessages]
+      .reverse()
+      .find((m) => m.role === "user");
+    const userPrompt = lastUserMessage?.content || "";
 
     const userAgentHeader = req.headers.get("user-agent") || undefined;
     const effectiveContext =
@@ -95,7 +109,7 @@ export async function POST(req: Request) {
     const result = await streamText({
       model,
       system: systemPrompt,
-      messages,
+      messages: boundedMessages,
       temperature: 0.7,
       async onFinish({ text }) {
         const effectiveChatId = chatId || body.conversationId;
@@ -109,7 +123,8 @@ export async function POST(req: Request) {
 
             const chatData = await fetchConversationById(effectiveChatId);
             if (chatData && (chatData.title === "Percakapan Baru" || !chatData.title)) {
-              generateChatTitle(userPrompt, effectiveChatId).catch(() => {});
+              const fastTitle = generateFastTitle(userPrompt);
+              await updateConversationTitle(effectiveChatId, fastTitle);
             }
           } catch (dbErr) {}
         }

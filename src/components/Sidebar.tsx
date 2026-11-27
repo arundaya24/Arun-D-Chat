@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Brain,
   MessageSquare,
@@ -23,6 +23,11 @@ interface SidebarProps {
   memoryCount: number;
 }
 
+interface ChatGroup {
+  title: string;
+  chats: ChatSession[];
+}
+
 export function Sidebar({
   chats,
   activeChatId,
@@ -36,9 +41,49 @@ export function Sidebar({
 }: SidebarProps) {
   const [filterQuery, setFilterQuery] = useState("");
 
-  const filteredChats = chats.filter((chat) =>
-    chat.title.toLowerCase().includes(filterQuery.toLowerCase())
-  );
+  const filteredChats = useMemo(() => {
+    if (!filterQuery.trim()) return chats;
+    const q = filterQuery.toLowerCase();
+    return chats.filter((chat) => chat.title.toLowerCase().includes(q));
+  }, [chats, filterQuery]);
+
+  const groupedChats = useMemo<ChatGroup[]>(() => {
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    ).getTime();
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const startOf7Days = startOfToday - 7 * 24 * 60 * 60 * 1000;
+
+    const today: ChatSession[] = [];
+    const yesterday: ChatSession[] = [];
+    const previous7Days: ChatSession[] = [];
+    const older: ChatSession[] = [];
+
+    for (const chat of filteredChats) {
+      const time = new Date(chat.updated_at || chat.created_at).getTime();
+      if (time >= startOfToday) {
+        today.push(chat);
+      } else if (time >= startOfYesterday) {
+        yesterday.push(chat);
+      } else if (time >= startOf7Days) {
+        previous7Days.push(chat);
+      } else {
+        older.push(chat);
+      }
+    }
+
+    const groups: ChatGroup[] = [];
+    if (today.length > 0) groups.push({ title: "Hari Ini", chats: today });
+    if (yesterday.length > 0) groups.push({ title: "Kemarin", chats: yesterday });
+    if (previous7Days.length > 0)
+      groups.push({ title: "7 Hari Terakhir", chats: previous7Days });
+    if (older.length > 0) groups.push({ title: "Lebih Lama", chats: older });
+
+    return groups;
+  }, [filteredChats]);
 
   return (
     <>
@@ -100,7 +145,7 @@ export function Sidebar({
             />
           </label>
 
-          {filteredChats.length === 0 ? (
+          {groupedChats.length === 0 ? (
             <div className="history-empty">
               {filterQuery
                 ? "Tidak ada percakapan yang cocok."
@@ -108,34 +153,42 @@ export function Sidebar({
             </div>
           ) : (
             <div className="history-list">
-              {filteredChats.map((chat) => {
-                const isActive = chat.id === activeChatId;
-                return (
-                  <div
-                    key={chat.id}
-                    className={`history-entry${isActive ? " is-active" : ""}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onSelectChat(chat.id)}
-                      className="history-select active:scale-[0.99]"
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <MessageSquare size={14} aria-hidden="true" />
-                      <span className="history-title">{chat.title}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteChat(chat.id)}
-                      className="history-delete active:scale-95"
-                      title="Hapus percakapan"
-                      aria-label={`Hapus ${chat.title}`}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                );
-              })}
+              {groupedChats.map((group) => (
+                <div key={group.title} className="history-group">
+                  <div className="history-group-title">{group.title}</div>
+                  {group.chats.map((chat) => {
+                    const isActive = chat.id === activeChatId;
+                    return (
+                      <div
+                        key={chat.id}
+                        className={`history-entry${isActive ? " is-active" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onSelectChat(chat.id)}
+                          className="history-select active:scale-[0.99]"
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <MessageSquare size={14} aria-hidden="true" />
+                          <span className="history-title">{chat.title}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteChat(chat.id);
+                          }}
+                          className="history-delete active:scale-95"
+                          title="Hapus percakapan"
+                          aria-label={`Hapus ${chat.title}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>

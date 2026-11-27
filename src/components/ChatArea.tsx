@@ -26,6 +26,7 @@ const MarkdownRenderer = dynamic(
 interface ChatAreaProps {
   messages: Message[];
   isLoading: boolean;
+  isMessagesLoading?: boolean;
   onSendPreset: (text: string) => void;
   onReload: () => void;
   errorMessage?: string | null;
@@ -35,6 +36,7 @@ interface ChatAreaProps {
 export function ChatArea({
   messages,
   isLoading,
+  isMessagesLoading,
   onSendPreset,
   onReload,
   errorMessage,
@@ -63,7 +65,12 @@ export function ChatArea({
         </div>
       )}
 
-      {messages.length === 0 ? (
+      {isMessagesLoading ? (
+        <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-neutral-400 dark:text-neutral-500">
+          <div className="w-5 h-5 border-2 border-neutral-300 dark:border-neutral-700 border-t-emerald-600 rounded-full animate-spin mb-3" />
+          <span className="text-xs font-sans">Memuat riwayat percakapan...</span>
+        </div>
+      ) : messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
       ) : (
         <div className="message-stack">
