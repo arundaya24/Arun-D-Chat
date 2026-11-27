@@ -1,5 +1,16 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
+CREATE TABLE IF NOT EXISTS public.conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL DEFAULT 'user_default_01',
+    title TEXT NOT NULL DEFAULT 'Percakapan Baru',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON public.conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON public.conversations(updated_at DESC);
+
 CREATE TABLE IF NOT EXISTS public.chats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT NOT NULL DEFAULT 'user_default_01',
@@ -13,12 +24,14 @@ CREATE INDEX IF NOT EXISTS idx_chats_updated_at ON public.chats(updated_at DESC)
 
 CREATE TABLE IF NOT EXISTS public.messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    chat_id UUID NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+    conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE,
+    chat_id UUID REFERENCES public.chats(id) ON DELETE CASCADE,
     role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages(conversation_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON public.messages(chat_id, created_at ASC);
 
 CREATE TABLE IF NOT EXISTS public.memories (
@@ -79,16 +92,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_conversations_updated_at ON public.conversations;
+CREATE TRIGGER trigger_update_conversations_updated_at
+BEFORE UPDATE ON public.conversations
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
 DROP TRIGGER IF EXISTS trigger_update_chats_updated_at ON public.chats;
 CREATE TRIGGER trigger_update_chats_updated_at
 BEFORE UPDATE ON public.chats
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.memories ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Public / Service Access Chats" ON public.chats FOR ALL USING (true);
-CREATE POLICY "Public / Service Access Messages" ON public.messages FOR ALL USING (true);
-CREATE POLICY "Public / Service Access Memories" ON public.memories FOR ALL USING (true);
+DROP POLICY IF EXISTS "Public / Service Access Conversations" ON public.conversations;
+CREATE POLICY "Public / Service Access Conversations" ON public.conversations FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public / Service Access Chats" ON public.chats;
+CREATE POLICY "Public / Service Access Chats" ON public.chats FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public / Service Access Messages" ON public.messages;
+CREATE POLICY "Public / Service Access Messages" ON public.messages FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public / Service Access Memories" ON public.memories;
+CREATE POLICY "Public / Service Access Memories" ON public.memories FOR ALL USING (true) WITH CHECK (true);

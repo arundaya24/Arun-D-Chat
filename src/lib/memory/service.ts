@@ -4,6 +4,7 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { localMemoriesStore } from "@/lib/memory/store";
 import { MemoryItem, ClientSystemContext } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
+import { updateConversationTitle } from "@/lib/chat/database";
 
 export const BASE_SYSTEM_PROMPT =
   "Kamu adalah asisten AI tingkat lanjut yang cerdas, logis, objektif, dan langsung ke inti permasalahan (to-the-point). Hindari basa-basi yang tidak perlu, jangan berhalusinasi, dan jika sebuah informasi tidak pasti atau di luar pengetahuanmu, katakan dengan jujur. Selalu gunakan penalaran terstruktur sebelum menjawab pertanyaan kompleks.";
@@ -192,9 +193,16 @@ export async function generateChatTitle(
   firstMessage: string,
   chatId: string
 ): Promise<string> {
-  if (!isSupabaseConfigured() || !isAIConfigured()) return "Percakapan Baru";
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return "Percakapan Baru";
+  const cleanExcerpt =
+    firstMessage
+      .replace(/["'\n\r]/g, " ")
+      .trim()
+      .slice(0, 32) || "Percakapan Baru";
+
+  if (!isAIConfigured()) {
+    await updateConversationTitle(chatId, cleanExcerpt);
+    return cleanExcerpt;
+  }
 
   try {
     const fastModel = getFastModel();
@@ -207,16 +215,12 @@ Judul:`,
     });
 
     const title =
-      text.replace(/["'\n\r]/g, "").trim().slice(0, 40) || "Percakapan Baru";
+      text.replace(/["'\n\r]/g, "").trim().slice(0, 40) || cleanExcerpt;
 
-    await supabase
-      .from("chats")
-      .update({ title, updated_at: new Date().toISOString() })
-      .eq("id", chatId);
-
+    await updateConversationTitle(chatId, title);
     return title;
   } catch (err) {
-    console.warn("Latar belakang judul chat dilewati:", err);
-    return "Percakapan Baru";
+    await updateConversationTitle(chatId, cleanExcerpt);
+    return cleanExcerpt;
   }
 }

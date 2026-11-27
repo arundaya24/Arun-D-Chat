@@ -9,6 +9,10 @@ import {
 import { getClientSystemContext } from "@/lib/client-context";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  persistChatMessagesPair,
+  fetchConversationById,
+} from "@/lib/chat/database";
 
 export const maxDuration = 60;
 
@@ -94,41 +98,24 @@ export async function POST(req: Request) {
       messages,
       temperature: 0.7,
       async onFinish({ text }) {
-        if (isSupabaseConfigured() && chatId && isValidUUID(chatId)) {
-          const supabase = getSupabaseAdmin();
-          if (supabase) {
-            try {
-              await supabase.from("messages").insert([
-                { chat_id: chatId, role: "user", content: userPrompt },
-                { chat_id: chatId, role: "assistant", content: text },
-              ]);
+        const effectiveChatId = chatId || body.conversationId;
+        if (effectiveChatId) {
+          try {
+            await persistChatMessagesPair(
+              effectiveChatId,
+              userPrompt,
+              text
+            );
 
-              await supabase
-                .from("chats")
-                .update({ updated_at: new Date().toISOString() })
-                .eq("id", chatId);
-
-              const { data: chatData } = await supabase
-                .from("chats")
-                .select("title")
-                .eq("id", chatId)
-                .maybeSingle();
-
-              if (chatData && chatData.title === "Percakapan Baru") {
-                generateChatTitle(userPrompt, chatId).catch((err) =>
-                  console.warn("Gagal membuat judul obrolan:", err)
-                );
-              }
-            } catch (dbErr) {
-              console.warn("Penyimpanan riwayat chat dilewati:", dbErr);
+            const chatData = await fetchConversationById(effectiveChatId);
+            if (chatData && (chatData.title === "Percakapan Baru" || !chatData.title)) {
+              generateChatTitle(userPrompt, effectiveChatId).catch(() => {});
             }
-          }
+          } catch (dbErr) {}
         }
 
         if (isAIConfigured()) {
-          extractAndSaveMemories(userPrompt, text, userId).catch((memErr) =>
-            console.warn("Ekstraksi memori latar belakang dilewati:", memErr)
-          );
+          extractAndSaveMemories(userPrompt, text, userId).catch(() => {});
         }
       },
     });
