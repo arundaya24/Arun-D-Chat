@@ -127,8 +127,7 @@ button {
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
+input:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
@@ -257,13 +256,11 @@ textarea:focus-visible {
   font-weight: 580;
 }
 
-.sidebar-new-chat:hover,
-.send-button:hover {
+.sidebar-new-chat:hover {
   background: var(--color-accent-hover);
 }
 
-.sidebar-new-chat::after,
-.send-button::after {
+.sidebar-new-chat::after {
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -277,8 +274,7 @@ textarea:focus-visible {
   transform: translateX(-140%) skewX(-16deg);
 }
 
-.sidebar-new-chat:hover::after,
-.send-button:hover::after {
+.sidebar-new-chat:hover::after {
   animation: button-shimmer 760ms var(--ease-ui) both;
 }
 
