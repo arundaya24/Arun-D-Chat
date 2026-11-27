@@ -419,6 +419,7 @@ export default function ChatPage() {
           messages={messages}
           isLoading={isLoading}
           isMessagesLoading={isMessagesLoading}
+          activeChatId={activeChatId}
           onSendPreset={handleSendPreset}
           errorMessage={errorMessage}
           onDismissError={() => setErrorMessage(null)}
@@ -443,6 +444,7 @@ export default function ChatPage() {
           loadMemoryCount();
         }}
         userId="user_default_01"
+        onMemoriesReset={loadMemoryCount}
       />
     </div>
   );

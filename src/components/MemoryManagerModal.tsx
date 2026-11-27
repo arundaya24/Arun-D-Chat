@@ -19,15 +19,18 @@ interface MemoryManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId?: string;
+  onMemoriesReset?: () => void;
 }
 
 export function MemoryManagerModal({
   isOpen,
   onClose,
   userId = "user_default_01",
+  onMemoriesReset,
 }: MemoryManagerModalProps) {
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -107,9 +110,38 @@ export function MemoryManagerModal({
       });
       if (res.ok) {
         setMemories((prev) => prev.filter((m) => m.id !== id));
+        onMemoriesReset?.();
       }
     } catch (err) {
       console.error("Gagal menghapus memori:", err);
+    }
+  };
+
+  const handleResetAllMemories = async () => {
+    const confirmed = confirm(
+      "Apakah Anda yakin ingin menghapus seluruh data memori?\n\nTindakan ini akan menghapus semua informasi personal, fakta, dan preferensi yang diingat AI tentang Anda. Riwayat percakapan tidak akan terhapus."
+    );
+    if (!confirmed) return;
+
+    setResetting(true);
+    setStatusMessage(null);
+    try {
+      const res = await fetch(`/api/memories?all=true&userId=${userId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setMemories([]);
+        onMemoriesReset?.();
+        setStatusMessage("Seluruh data memori berhasil direset secara permanen.");
+        setTimeout(() => setStatusMessage(null), 3500);
+      } else {
+        alert(data.error || "Gagal mereset data memori");
+      }
+    } catch (err) {
+      console.error("Gagal mereset memori:", err);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -182,6 +214,18 @@ export function MemoryManagerModal({
                 aria-label="Cari memori"
               />
             </div>
+            {memories.length > 0 && (
+              <button
+                type="button"
+                onClick={handleResetAllMemories}
+                disabled={resetting}
+                className="modal-danger-btn active:scale-95"
+                title="Hapus semua memori"
+              >
+                <Trash2 size={13} />
+                <span>{resetting ? "Mereset..." : "Reset Memori"}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowAddForm(!showAddForm)}

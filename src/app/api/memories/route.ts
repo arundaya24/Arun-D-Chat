@@ -64,7 +64,6 @@ export async function POST(req: Request) {
     const validCategories = ["preference", "fact", "profile", "goal", "work", "general"] as const;
     const resolvedCategory = validCategories.includes(category as any) ? category : "general";
 
-    // Mode Supabase terhubung
     if (isSupabaseConfigured() && isAIConfigured()) {
       const supabase = getSupabaseAdmin();
       if (supabase) {
@@ -92,7 +91,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fallback mode lokal (in-memory) saat Supabase belum dikonfigurasi
     const localMemory = localMemoriesStore.addMemory({
       user_id: userId,
       content: content.trim(),
@@ -116,6 +114,30 @@ export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const all = searchParams.get("all");
+    const userId = searchParams.get("userId") || "user_default_01";
+
+    if (all === "true" || all === "1") {
+      localMemoriesStore.clearMemories(userId);
+
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabaseAdmin();
+        if (supabase) {
+          const { error } = await supabase
+            .from("memories")
+            .delete()
+            .eq("user_id", userId);
+          if (error) {
+            console.warn("Gagal mereset memori Supabase:", error.message);
+          }
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Seluruh memori pengguna berhasil direset.",
+      });
+    }
 
     if (!id) {
       return NextResponse.json(

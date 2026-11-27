@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { Message } from "ai";
 import {
   Sparkles,
@@ -14,19 +13,13 @@ import {
   BrainCircuit,
   ShieldCheck,
 } from "lucide-react";
-
-const MarkdownRenderer = dynamic(
-  () => import("./MarkdownRenderer").then((mod) => mod.MarkdownRenderer),
-  {
-    ssr: false,
-    loading: () => <div className="text-sm text-[var(--color-muted)]">Memuat format...</div>,
-  }
-);
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ChatAreaProps {
   messages: Message[];
   isLoading: boolean;
   isMessagesLoading?: boolean;
+  activeChatId?: string | null;
   onSendPreset: (text: string) => void;
   onReload: () => void;
   errorMessage?: string | null;
@@ -37,19 +30,57 @@ export function ChatArea({
   messages,
   isLoading,
   isMessagesLoading,
+  activeChatId,
   onSendPreset,
   onReload,
   errorMessage,
   onDismissError,
 }: ChatAreaProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
+  const prevMessagesLengthRef = useRef(messages.length);
+  const prevActiveChatIdRef = useRef<string | null>(activeChatId || null);
+
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+  };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading, errorMessage]);
+    if (activeChatId !== prevActiveChatIdRef.current) {
+      prevActiveChatIdRef.current = activeChatId || null;
+      if (!isMessagesLoading && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }
+  }, [activeChatId, isMessagesLoading]);
+
+  useEffect(() => {
+    if (!isMessagesLoading && messages.length > 0 && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [isMessagesLoading]);
+
+  useEffect(() => {
+    if (isMessagesLoading) return;
+    const isNewMessage = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    if (isNewMessage) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else if (isLoading && isNearBottomRef.current && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [messages, isLoading, isMessagesLoading]);
 
   return (
-    <div className="chat-scroll">
+    <div
+      ref={scrollContainerRef}
+      onScroll={handleScroll}
+      className="chat-scroll"
+    >
       {errorMessage && (
         <div role="alert" className="chat-error-banner">
           <span>{errorMessage}</span>
@@ -66,14 +97,33 @@ export function ChatArea({
       )}
 
       {isMessagesLoading ? (
-        <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-neutral-400 dark:text-neutral-500">
-          <div className="w-5 h-5 border-2 border-neutral-300 dark:border-neutral-700 border-t-emerald-600 rounded-full animate-spin mb-3" />
-          <span className="text-xs font-sans">Memuat riwayat percakapan...</span>
+        <div className="message-stack py-6 space-y-6">
+          <div className="message-row is-user opacity-35">
+            <div className="message-mark">
+              <User size={15} />
+            </div>
+            <div className="message-main">
+              <div className="h-3.5 bg-neutral-300 dark:bg-neutral-700 rounded w-16 mb-2 animate-pulse" />
+              <div className="h-9 bg-neutral-200 dark:bg-neutral-800 rounded-lg w-2/3 animate-pulse" />
+            </div>
+          </div>
+          <div className="message-row is-assistant opacity-35">
+            <div className="message-mark is-assistant">
+              <Sparkles size={15} />
+            </div>
+            <div className="message-main">
+              <div className="h-3.5 bg-neutral-300 dark:bg-neutral-700 rounded w-24 mb-2 animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-4/5 animate-pulse" />
+                <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/5 animate-pulse" />
+              </div>
+            </div>
+          </div>
         </div>
       ) : messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
       ) : (
-        <div className="message-stack">
+        <div key={activeChatId || "empty-session"} className="message-stack">
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const isLastAssistant =
@@ -81,7 +131,7 @@ export function ChatArea({
 
             return (
               <div
-                key={message.id || index}
+                key={message.id ? `${message.id}` : `${activeChatId}-${index}-${message.role}`}
                 className={`message-row${isUser ? " is-user" : " is-assistant"}`}
               >
                 <div className={`message-mark${isUser ? "" : " is-assistant"}`}>
@@ -168,21 +218,12 @@ function CopyMessageButton({ content }: { content: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="copy-message-button active:scale-95"
-      title="Salin pesan"
-      aria-label="Salin pesan"
+      className="message-action-btn active:scale-95"
+      title="Salin teks"
+      aria-label="Salin teks pesan"
     >
-      {copied ? (
-        <>
-          <Check size={13} />
-          <span>Tersalin</span>
-        </>
-      ) : (
-        <>
-          <Copy size={13} />
-          <span>Salin</span>
-        </>
-      )}
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+      <span>{copied ? "Tersalin" : "Salin"}</span>
     </button>
   );
 }
@@ -194,15 +235,8 @@ function EmptyStateScreen({
 }) {
   const presets = [
     {
-      title: "Arsitektur Sistem",
-      desc: "Komparasi trade-off arsitektur modular monolithic vs event-driven microservices pada sistem skala menengah.",
-      icon: <BrainCircuit size={15} className="suggestion-icon" />,
-      prompt:
-        "Bandingkan arsitektur monolithic modular vs microservices untuk aplikasi skala menengah dengan penalaran terstruktur.",
-    },
-    {
-      title: "Stream & Resilience",
-      desc: "Pola penanganan error dan backpressure pada streaming response Next.js App Router.",
+      title: "Arsitektur Next.js 14",
+      desc: "Eksplorasi App Router, Server Actions, streaming SSR, dan pattern optimasi data fetching.",
       icon: <Code2 size={15} className="suggestion-icon" />,
       prompt:
         "Tunjukkan best practice error handling dan streaming response pada Next.js 14 App Router API route.",
