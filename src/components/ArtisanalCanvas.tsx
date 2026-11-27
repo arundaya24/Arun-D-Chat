@@ -15,20 +15,35 @@ const vertexShaderSource = `
   varying vec3 vViewPosition;
   varying float vElevation;
 
+  float getElevation(vec2 pos, float time) {
+    float primary = sin(pos.x * 0.85 + time * 0.38 + cos(pos.y * 0.65 + time * 0.22) * 0.72) * 0.52;
+    float secondary = cos(pos.x * 1.45 + pos.y * 0.75 + time * 0.44) * 0.24;
+    float tertiary = sin(pos.x * 2.15 - pos.y * 0.65 + time * 0.48) * 0.10;
+    
+    float mouseDist = distance(pos * 0.48, uMouse);
+    float mouseDecay = exp(-mouseDist * mouseDist * 2.4);
+    float mouseWave = cos(mouseDist * 2.4 - time * 0.75) * mouseDecay * 0.18;
+    
+    return primary + secondary + tertiary + mouseWave;
+  }
+
   void main() {
     vUv = uv;
     vec3 transformed = position;
     
-    float waveA = sin(transformed.x * 1.8 + uTime * 0.42) * cos(transformed.y * 1.4 + uTime * 0.32);
-    float waveB = sin(transformed.x * 3.4 - uTime * 0.55 + transformed.y * 2.2) * 0.16;
-    float mouseDistance = distance(transformed.xy * 0.5, uMouse);
-    float mouseRipple = sin(mouseDistance * 5.5 - uTime * 1.1) * exp(-mouseDistance * 2.0) * 0.24;
+    float elevation = getElevation(transformed.xy, uTime);
+    transformed.z += elevation;
+    vElevation = elevation;
     
-    float totalElevation = (waveA + waveB + mouseRipple) * 0.44;
-    transformed.z += totalElevation;
+    float delta = 0.04;
+    float elevX = getElevation(transformed.xy + vec2(delta, 0.0), uTime);
+    float elevY = getElevation(transformed.xy + vec2(0.0, delta), uTime);
     
-    vElevation = totalElevation;
-    vNormal = normalize(normalMatrix * normal);
+    vec3 tangentX = vec3(delta, 0.0, elevX - elevation);
+    vec3 tangentY = vec3(0.0, delta, elevY - elevation);
+    vec3 calculatedNormal = normalize(cross(tangentX, tangentY));
+    
+    vNormal = normalize(normalMatrix * calculatedNormal);
     
     vec4 modelViewPosition = modelViewMatrix * vec4(transformed, 1.0);
     vViewPosition = -modelViewPosition.xyz;
