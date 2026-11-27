@@ -113,12 +113,13 @@ export async function POST(req: Request) {
       temperature: 0.7,
       async onFinish({ text }) {
         const effectiveChatId = chatId || body.conversationId;
-        if (effectiveChatId) {
+        const validText = typeof text === "string" ? text.trim() : "";
+        if (effectiveChatId && validText.length > 0) {
           try {
             await persistChatMessagesPair(
               effectiveChatId,
               userPrompt,
-              text
+              validText
             );
 
             const chatData = await fetchConversationById(effectiveChatId);
@@ -129,8 +130,8 @@ export async function POST(req: Request) {
           } catch (dbErr) {}
         }
 
-        if (isAIConfigured()) {
-          extractAndSaveMemories(userPrompt, text, userId).catch(() => {});
+        if (isAIConfigured() && validText.length > 0) {
+          extractAndSaveMemories(userPrompt, validText, userId).catch(() => {});
         }
       },
     });

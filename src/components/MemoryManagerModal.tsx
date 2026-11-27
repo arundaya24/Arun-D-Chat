@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Brain,
   Trash2,
@@ -40,12 +40,25 @@ export function MemoryManagerModal({
   const [showAddForm, setShowAddForm] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadMemories();
     }
   }, [isOpen, userId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [isOpen, onClose]);
 
   const loadMemories = async () => {
     setLoading(true);
@@ -90,7 +103,8 @@ export function MemoryManagerModal({
             ? "Fakta baru berhasil disimpan ke database vektor pgvector."
             : "Fakta baru disimpan pada memori lokal sesi aktif."
         );
-        setTimeout(() => setStatusMessage(null), 3000);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setStatusMessage(null), 3000);
       } else {
         alert(data.error || "Gagal menyimpan data memori");
       }
@@ -134,7 +148,8 @@ export function MemoryManagerModal({
         setMemories([]);
         onMemoriesReset?.();
         setStatusMessage("Seluruh data memori berhasil direset secara permanen.");
-        setTimeout(() => setStatusMessage(null), 3500);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setStatusMessage(null), 3500);
       } else {
         alert(data.error || "Gagal mereset data memori");
       }
@@ -165,7 +180,12 @@ export function MemoryManagerModal({
   });
 
   return (
-    <div className="modal-backdrop">
+    <div
+      className="modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="modal-dialog">
         <header className="modal-header">
           <div className="modal-title-group">

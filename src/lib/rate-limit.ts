@@ -13,11 +13,11 @@ export function checkRateLimit(
   const now = Date.now();
 
   if (rateLimitMap.size > 100) {
-    for (const [key, value] of rateLimitMap.entries()) {
+    rateLimitMap.forEach((value, key) => {
       if (now > value.resetTime) {
         rateLimitMap.delete(key);
       }
-    }
+    });
   }
 
   const record = rateLimitMap.get(identifier);

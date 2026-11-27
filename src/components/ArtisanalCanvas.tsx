@@ -217,6 +217,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
     };
   }, []);
 

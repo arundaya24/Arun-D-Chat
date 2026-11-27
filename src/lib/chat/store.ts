@@ -26,7 +26,12 @@ function ensureStorageLoaded() {
         globalThis.__local_conversations = parsed.conversations;
       }
       if (Array.isArray(parsed.messages)) {
-        globalThis.__local_messages = parsed.messages;
+        const convIds = new Set(
+          (globalThis.__local_conversations || []).map((c) => c.id)
+        );
+        globalThis.__local_messages = parsed.messages.filter(
+          (m: any) => convIds.has(m.conversation_id) || convIds.has(m.chat_id)
+        );
       }
     }
   } catch (err) {

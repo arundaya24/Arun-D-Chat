@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Brain,
   MessageSquare,
@@ -40,6 +40,15 @@ export function Sidebar({
   memoryCount,
 }: SidebarProps) {
   const [filterQuery, setFilterQuery] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onToggleSidebar();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onToggleSidebar]);
 
   const filteredChats = useMemo(() => {
     if (!filterQuery.trim()) return chats;

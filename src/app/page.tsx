@@ -251,6 +251,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isMemoryModalOpen || isSidebarOpen) return;
       const activeEl = document.activeElement;
       const isInput =
         activeEl?.tagName === "INPUT" ||
@@ -271,7 +272,7 @@ export default function ChatPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewChat]);
+  }, [handleNewChat, isMemoryModalOpen, isSidebarOpen]);
 
   const handleDeleteChat = async (chatId: string) => {
     if (!confirm("Hapus percakapan ini secara permanen?")) return;
