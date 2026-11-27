@@ -19,7 +19,7 @@ const MarkdownRenderer = dynamic(
   () => import("./MarkdownRenderer").then((mod) => mod.MarkdownRenderer),
   {
     ssr: false,
-    loading: () => <div className="text-sm text-neutral-400">Memuat format...</div>,
+    loading: () => <div className="text-sm text-[var(--color-muted)]">Memuat format...</div>,
   }
 );
 
@@ -49,38 +49,13 @@ export function ChatArea({
   return (
     <div className="chat-scroll">
       {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            maxWidth: "850px",
-            margin: "0 auto 16px",
-            padding: "12px 16px",
-            borderRadius: "10px",
-            background: "rgba(228, 134, 123, 0.12)",
-            border: "1px solid rgba(228, 134, 123, 0.3)",
-            color: "#fca5a5",
-            fontSize: "13px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "12px",
-          }}
-        >
+        <div role="alert" className="chat-error-banner">
           <span>{errorMessage}</span>
           {onDismissError && (
             <button
               type="button"
               onClick={onDismissError}
-              className="active:scale-95"
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "#fca5a5",
-                cursor: "pointer",
-                fontSize: "12px",
-                textDecoration: "underline",
-                flexShrink: 0,
-              }}
+              className="chat-error-dismiss active:scale-95"
             >
               Tutup
             </button>
