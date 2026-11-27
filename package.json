@@ -12,6 +12,7 @@
     "@ai-sdk/google": "^0.0.55",
     "@ai-sdk/openai": "^0.0.68",
     "@supabase/supabase-js": "^2.45.6",
+    "@types/three": "^0.187.0",
     "ai": "^3.4.15",
     "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",
@@ -21,7 +22,8 @@
     "react-markdown": "^9.0.1",
     "rehype-highlight": "^7.0.1",
     "remark-gfm": "^4.0.0",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

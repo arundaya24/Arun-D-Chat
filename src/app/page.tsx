@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useChat } from "ai/react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
 import { MemoryManagerModal } from "@/components/MemoryManagerModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
 import { Brain, Menu } from "lucide-react";
 
+const ArtisanalCanvas = dynamic(
+  () => import("@/components/ArtisanalCanvas").then((mod) => mod.ArtisanalCanvas),
+  { ssr: false }
+);
+
 export default function ChatPage() {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,6 +26,22 @@ export default function ChatPage() {
   const [memoryCount, setMemoryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("arun_theme") as "dark" | "light" | null;
+    const initialTheme = storedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    setTheme(initialTheme);
+    document.documentElement.classList.remove("dark", "light");
+    document.documentElement.classList.add(initialTheme);
+  }, []);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("arun_theme", nextTheme);
+    document.documentElement.classList.remove("dark", "light");
+    document.documentElement.classList.add(nextTheme);
+  };
 
   const {
     messages,
@@ -191,7 +215,6 @@ export default function ChatPage() {
       return;
     }
 
-    // Buat sesi baru secara otomatis bila belum ada chat aktif
     setInput("");
     isSubmittingRef.current = true;
     void (async () => {
@@ -231,6 +254,7 @@ export default function ChatPage() {
 
   return (
     <div className="app-shell">
+      <ArtisanalCanvas theme={theme} />
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
@@ -257,6 +281,7 @@ export default function ChatPage() {
             <span className="workspace-title">{activeChatTitle}</span>
           </div>
           <div className="workspace-actions">
+            <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
             <button
               type="button"
               onClick={() => setIsMemoryModalOpen(true)}
