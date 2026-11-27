@@ -63,28 +63,28 @@ export function ChatInput({
             <button
               type="button"
               onClick={stop}
-              className="stop-button"
+              className="stop-button active:scale-95"
               title="Hentikan pembuatan respon"
               aria-label="Hentikan pembuatan respon"
             >
-              <Square size={15} fill="currentColor" />
+              <Square size={14} fill="currentColor" />
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim()}
-              className="send-button"
+              className="send-button active:scale-95"
               title="Kirim pesan"
               aria-label="Kirim pesan"
             >
-              <ArrowUp size={16} />
+              <ArrowUp size={15} />
             </button>
           )}
         </div>
       </form>
 
       <p className="composer-disclaimer">
-        Arun-D&apos;Chat dapat melakukan kesalahan. Selalu verifikasi fakta dan informasi penting.
+        Arun-D&apos;Chat dapat melakukan kesalahan. Harap verifikasi data penting secara independen.
       </p>
     </div>
   );

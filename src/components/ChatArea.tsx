@@ -71,6 +71,7 @@ export function ChatArea({
             <button
               type="button"
               onClick={onDismissError}
+              className="active:scale-95"
               style={{
                 background: "transparent",
                 border: "none",
@@ -125,7 +126,7 @@ export function ChatArea({
                         <button
                           type="button"
                           onClick={onReload}
-                          className="regenerate-button"
+                          className="regenerate-button active:scale-95"
                           title="Regenerasi respon"
                           aria-label="Regenerasi respon"
                         >
@@ -155,7 +156,7 @@ export function ChatArea({
                     <span></span>
                     <span></span>
                   </div>
-                  <span>Sedang memproses respon...</span>
+                  <span className="font-mono text-[11px]">Memproses respon...</span>
                 </div>
               </div>
             </div>
@@ -185,7 +186,7 @@ function CopyMessageButton({ content }: { content: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="copy-message-button"
+      className="copy-message-button active:scale-95"
       title="Salin pesan"
       aria-label="Salin pesan"
     >
@@ -211,30 +212,30 @@ function EmptyStateScreen({
 }) {
   const presets = [
     {
-      title: "Arsitektur Full-Stack",
-      desc: "Bandingkan arsitektur monolithic modular vs microservices untuk aplikasi skala menengah.",
-      icon: <BrainCircuit size={16} className="suggestion-icon" />,
+      title: "Arsitektur Sistem",
+      desc: "Komparasi trade-off arsitektur modular monolithic vs event-driven microservices pada sistem skala menengah.",
+      icon: <BrainCircuit size={15} className="suggestion-icon" />,
       prompt:
         "Bandingkan arsitektur monolithic modular vs microservices untuk aplikasi skala menengah dengan penalaran terstruktur.",
     },
     {
-      title: "Optimasi & Error Handling",
-      desc: "Best practice error handling dan streaming response pada Next.js 14 App Router.",
-      icon: <Code2 size={16} className="suggestion-icon" />,
+      title: "Stream & Resilience",
+      desc: "Pola penanganan error dan backpressure pada streaming response Next.js App Router.",
+      icon: <Code2 size={15} className="suggestion-icon" />,
       prompt:
         "Tunjukkan best practice error handling dan streaming response pada Next.js 14 App Router API route.",
     },
     {
-      title: "Memori & Preferensi",
-      desc: "Uji fitur self-learning RAG dengan memberikan preferensi kerja atau profil Anda.",
-      icon: <Zap size={16} className="suggestion-icon" />,
+      title: "Konteks & Preferensi",
+      desc: "Simpan profil teknologi dan batasan implementasi ke dalam memori vektor terindeks.",
+      icon: <Zap size={15} className="suggestion-icon" />,
       prompt:
         "Saya adalah software engineer yang fokus pada TypeScript dan Clean Architecture. Ingat ini untuk referensi berikutnya.",
     },
     {
-      title: "Analisis Database Vektor",
-      desc: "Bandingkan pgvector (PostgreSQL) vs Pinecone untuk AI memory.",
-      icon: <ShieldCheck size={16} className="suggestion-icon" />,
+      title: "Evaluasi pgvector vs Pinecone",
+      desc: "Analisis teknis efisiensi index HNSW PostgreSQL dibanding solusi managed vector database.",
+      icon: <ShieldCheck size={15} className="suggestion-icon" />,
       prompt:
         "Analisis komparatif yang objektif antara pgvector (Supabase/PostgreSQL) vs Pinecone untuk AI application memory.",
     },
@@ -243,14 +244,14 @@ function EmptyStateScreen({
   return (
     <div className="empty-state">
       <div className="empty-mark" aria-hidden="true">
-        <Sparkles size={18} />
+        <Sparkles size={16} />
       </div>
 
       <h1 className="empty-heading">
         Apa yang ingin Anda selesaikan hari ini?
       </h1>
       <p className="empty-description">
-        Didukung penalaran logis terstruktur, streaming teks real-time, dan sistem memori jangka panjang otomatis.
+        Ruang kerja penalaran terstruktur dengan streaming respons real-time dan sistem memori jangka panjang terindeks.
       </p>
 
       <div className="suggestion-grid">
@@ -259,7 +260,7 @@ function EmptyStateScreen({
             key={idx}
             type="button"
             onClick={() => onSendPreset(item.prompt)}
-            className="suggestion-card"
+            className="suggestion-card active:scale-[0.98]"
           >
             <div className="suggestion-topline">
               <span className="suggestion-title">{item.title}</span>

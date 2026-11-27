@@ -118,7 +118,7 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={() => onSelectChat(chat.id)}
-                      className="history-select"
+                      className="history-select active:scale-[0.99]"
                       aria-current={isActive ? "page" : undefined}
                     >
                       <MessageSquare size={14} aria-hidden="true" />

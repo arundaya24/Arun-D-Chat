@@ -111,7 +111,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="copy-code-button"
+          className="copy-code-button active:scale-95"
           title="Salin Kode"
         >
           {copied ? (
