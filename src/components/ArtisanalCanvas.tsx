@@ -19,12 +19,12 @@ const vertexShaderSource = `
     vUv = uv;
     vec3 transformed = position;
     
-    float waveA = sin(transformed.x * 1.8 + uTime * 0.45) * cos(transformed.y * 1.4 + uTime * 0.35);
-    float waveB = sin(transformed.x * 3.2 - uTime * 0.6 + transformed.y * 2.4) * 0.18;
+    float waveA = sin(transformed.x * 1.8 + uTime * 0.42) * cos(transformed.y * 1.4 + uTime * 0.32);
+    float waveB = sin(transformed.x * 3.4 - uTime * 0.55 + transformed.y * 2.2) * 0.16;
     float mouseDistance = distance(transformed.xy * 0.5, uMouse);
-    float mouseRipple = sin(mouseDistance * 6.0 - uTime * 1.2) * exp(-mouseDistance * 2.2) * 0.22;
+    float mouseRipple = sin(mouseDistance * 5.5 - uTime * 1.1) * exp(-mouseDistance * 2.0) * 0.24;
     
-    float totalElevation = (waveA + waveB + mouseRipple) * 0.42;
+    float totalElevation = (waveA + waveB + mouseRipple) * 0.44;
     transformed.z += totalElevation;
     
     vElevation = totalElevation;
@@ -47,39 +47,49 @@ const fragmentShaderSource = `
   void main() {
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(vViewPosition);
+    vec3 lightDir = normalize(vec3(0.55, 0.75, 1.15));
     
-    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.2);
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    float specular = pow(max(dot(reflect(-lightDir, normal), viewDir), 0.0), 22.0);
+    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 3.0);
     
-    vec3 darkBase = vec3(0.045, 0.055, 0.048);
+    vec3 darkShadow = vec3(0.035, 0.045, 0.038);
+    vec3 darkMid = vec3(0.065, 0.09, 0.075);
+    vec3 darkHighlight = vec3(0.12, 0.25, 0.19);
     vec3 darkAccent = vec3(0.063, 0.639, 0.498);
-    vec3 darkSecondary = vec3(0.08, 0.18, 0.14);
     
-    vec3 lightBase = vec3(0.965, 0.978, 0.968);
-    vec3 lightAccent = vec3(0.058, 0.603, 0.462);
-    vec3 lightSecondary = vec3(0.88, 0.94, 0.91);
+    vec3 lightShadow = vec3(0.74, 0.82, 0.77);
+    vec3 lightMid = vec3(0.86, 0.92, 0.88);
+    vec3 lightHighlight = vec3(0.97, 1.0, 0.98);
+    vec3 lightAccent = vec3(0.04, 0.55, 0.42);
     
-    vec3 activeBase = mix(darkBase, lightBase, uTheme);
+    vec3 activeShadow = mix(darkShadow, lightShadow, uTheme);
+    vec3 activeMid = mix(darkMid, lightMid, uTheme);
+    vec3 activeHighlight = mix(darkHighlight, lightHighlight, uTheme);
     vec3 activeAccent = mix(darkAccent, lightAccent, uTheme);
-    vec3 activeSecondary = mix(darkSecondary, lightSecondary, uTheme);
     
-    float surfaceGradient = smoothstep(-0.4, 0.4, vElevation);
-    vec3 color = mix(activeBase, activeSecondary, surfaceGradient * 0.65);
-    color = mix(color, activeAccent, fresnel * (uTheme > 0.5 ? 0.35 : 0.65));
+    float elevationFactor = smoothstep(-0.4, 0.4, vElevation);
+    vec3 surfaceColor = mix(activeShadow, activeMid, diffuse * 0.7 + 0.3);
+    surfaceColor = mix(surfaceColor, activeHighlight, elevationFactor * 0.4 + specular * 0.6);
+    surfaceColor = mix(surfaceColor, activeAccent, fresnel * (uTheme > 0.5 ? 0.45 : 0.65));
     
-    float subtleIridescence = sin(vUv.x * 12.0 + uTime * 0.3) * cos(vUv.y * 12.0 + uTime * 0.2) * 0.035;
-    color += subtleIridescence * (uTheme > 0.5 ? 0.5 : 0.8);
+    float iridescentEffect = sin(vUv.x * 10.0 + uTime * 0.2) * cos(vUv.y * 10.0 + uTime * 0.2) * 0.025;
+    surfaceColor += iridescentEffect * (uTheme > 0.5 ? 0.6 : 0.9);
     
-    float alpha = mix(0.48, 0.28, uTheme);
-    gl_FragColor = vec4(color, alpha);
+    float alpha = mix(0.72, 0.62, uTheme);
+    gl_FragColor = vec4(surfaceColor, alpha);
   }
 `;
 
 export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const themeUniformRef = useRef<THREE.IUniform<number>>({ value: theme === "light" ? 1.0 : 0.0 });
+  const targetThemeRef = useRef<number>(theme === "light" ? 1.0 : 0.0);
+  const currentThemeUniformRef = useRef<THREE.IUniform<number>>({
+    value: theme === "light" ? 1.0 : 0.0,
+  });
 
   useEffect(() => {
-    themeUniformRef.current.value = theme === "light" ? 1.0 : 0.0;
+    targetThemeRef.current = theme === "light" ? 1.0 : 0.0;
   }, [theme]);
 
   useEffect(() => {
@@ -96,7 +106,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       0.1,
       100
     );
-    camera.position.set(0, -1.2, 3.4);
+    camera.position.set(0, -1.15, 3.35);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
@@ -104,17 +114,18 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       antialias: true,
       powerPreference: "high-performance",
     });
+    renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
     const segments = isMobileViewport ? 48 : 96;
-    const geometry = new THREE.PlaneGeometry(6.4, 4.8, segments, segments);
+    const geometry = new THREE.PlaneGeometry(6.6, 5.0, segments, segments);
 
     const uniforms = {
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0, 0) },
-      uTheme: themeUniformRef.current,
+      uTheme: currentThemeUniformRef.current,
     };
 
     const material = new THREE.ShaderMaterial({
@@ -150,6 +161,9 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       if (!isReducedMotion) {
         uniforms.uTime.value = elapsedTime;
       }
+
+      currentThemeUniformRef.current.value +=
+        (targetThemeRef.current - currentThemeUniformRef.current.value) * 0.05;
 
       mouseCurrent.x += (mouseTarget.x - mouseCurrent.x) * 0.045;
       mouseCurrent.y += (mouseTarget.y - mouseCurrent.y) * 0.045;
