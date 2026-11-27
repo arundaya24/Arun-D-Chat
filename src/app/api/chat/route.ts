@@ -112,7 +112,7 @@ export async function POST(req: Request) {
           }
         }
 
-        if (isSupabaseConfigured() && isAIConfigured()) {
+        if (isAIConfigured()) {
           extractAndSaveMemories(userPrompt, text, userId).catch((memErr) =>
             console.warn("Ekstraksi memori latar belakang dilewati:", memErr)
           );

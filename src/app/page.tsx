@@ -45,8 +45,10 @@ export default function ChatPage() {
       console.warn("Kesalahan streaming AI:", err);
       let msg = err.message || "Terjadi kesalahan saat berkomunikasi dengan AI.";
       try {
-        const parsed = JSON.parse(err.message);
-        if (parsed.error) msg = parsed.error;
+        if (typeof err.message === "string" && err.message.trim().startsWith("{")) {
+          const parsed = JSON.parse(err.message);
+          if (parsed.error) msg = parsed.error;
+        }
       } catch {}
       setErrorMessage(msg);
     },

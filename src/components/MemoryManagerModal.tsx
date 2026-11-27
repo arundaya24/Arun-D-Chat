@@ -48,7 +48,7 @@ export function MemoryManagerModal({
     setLoading(true);
     try {
       const res = await fetch(`/api/memories?userId=${userId}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.memories) {
         setMemories(data.memories);
       }
@@ -76,7 +76,7 @@ export function MemoryManagerModal({
           category: newCategory,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data.memory) {
         setMemories((prev) => [data.memory, ...prev]);
         setNewContent("");
