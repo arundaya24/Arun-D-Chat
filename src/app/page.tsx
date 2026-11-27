@@ -7,6 +7,7 @@ import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
 import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { ChatSession } from "@/types";
+import { getClientSystemContext } from "@/lib/client-context";
 import { Brain, Menu } from "lucide-react";
 
 export default function ChatPage() {
@@ -177,10 +178,15 @@ export default function ChatPage() {
     if (!prompt || isLoading || isSubmittingRef.current) return;
 
     setErrorMessage(null);
+    const clientContext = getClientSystemContext();
 
     if (activeChatId) {
       handleSubmit(event, {
-        body: { chatId: activeChatId, userId: "user_default_01" },
+        body: {
+          chatId: activeChatId,
+          userId: "user_default_01",
+          clientContext,
+        },
       });
       return;
     }
@@ -194,7 +200,13 @@ export default function ChatPage() {
         const currentChatId = chatId || crypto.randomUUID();
         await append(
           { role: "user", content: prompt },
-          { body: { chatId: currentChatId, userId: "user_default_01" } }
+          {
+            body: {
+              chatId: currentChatId,
+              userId: "user_default_01",
+              clientContext,
+            },
+          }
         );
       } catch (err) {
         console.error("Gagal mengirim prompt:", err);
@@ -202,6 +214,16 @@ export default function ChatPage() {
         isSubmittingRef.current = false;
       }
     })();
+  };
+
+  const handleReload = () => {
+    reload({
+      body: {
+        chatId: activeChatId,
+        userId: "user_default_01",
+        clientContext: getClientSystemContext(),
+      },
+    });
   };
 
   const activeChatTitle =
@@ -259,7 +281,7 @@ export default function ChatPage() {
           messages={messages}
           isLoading={isLoading}
           onSendPreset={handleSendPreset}
-          onReload={reload}
+          onReload={handleReload}
           errorMessage={errorMessage}
           onDismissError={() => setErrorMessage(null)}
         />

@@ -2,27 +2,43 @@ import { generateText } from "ai";
 import { getFastModel, generateEmbedding, isAIConfigured } from "@/lib/ai/provider";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { localMemoriesStore } from "@/lib/memory/store";
-import { MemoryItem } from "@/types";
+import { MemoryItem, ClientSystemContext } from "@/types";
+import { getClientSystemContext } from "@/lib/client-context";
 
 export const BASE_SYSTEM_PROMPT =
   "Kamu adalah asisten AI tingkat lanjut yang cerdas, logis, objektif, dan langsung ke inti permasalahan (to-the-point). Hindari basa-basi yang tidak perlu, jangan berhalusinasi, dan jika sebuah informasi tidak pasti atau di luar pengetahuanmu, katakan dengan jujur. Selalu gunakan penalaran terstruktur sebelum menjawab pertanyaan kompleks.";
 
-export function buildAugmentedSystemPrompt(memories: MemoryItem[]): string {
-  if (!memories || memories.length === 0) {
-    return BASE_SYSTEM_PROMPT;
-  }
+export function buildAugmentedSystemPrompt(
+  memories: MemoryItem[],
+  context?: ClientSystemContext
+): string {
+  const temporal = context || getClientSystemContext();
 
-  const memoryList = memories
-    .map((m) => `- [${m.category.toUpperCase()}] ${m.content}`)
-    .join("\n");
+  const temporalBlock = `[KONTEKS SISTEM & WAKTU NYATA]:
+- Hari saat ini: ${temporal.dayOfWeek}
+- Waktu & Tanggal Lokal: ${temporal.formattedDateTime}
+- Zona Waktu: ${temporal.timeZone}
+- Sistem Operasi / Perangkat: ${temporal.deviceOS || "Perangkat Pengguna"}
+- Klien Browser: ${temporal.browser || "Web"}
+- Timestamp ISO: ${temporal.isoDate}
+
+Instruksi Waktu & Sistem:
+1. Kamu memiliki akses real-time langsung ke tanggal, hari, jam, dan zona waktu lokal pengguna saat ini.
+2. Jika pengguna menanyakan hari apa hari ini, tanggal berapa sekarang, waktu saat ini, atau relasi waktu seperti kemarin, besok, lusa, atau minggu depan, gunakan informasi waktu lokal di atas secara akurat dan tegas tanpa ragu.
+3. JANGAN PERNAH menyatakan bahwa kamu tidak memiliki akses waktu nyata atau terbatas pada knowledge cutoff ketika ditanya mengenai hari, tanggal, atau waktu saat ini.`;
+
+  const memoryBlock =
+    memories && memories.length > 0
+      ? `\n\n[MEMORI JANGKA PANJANG TENTANG PENGGUNA]:
+Berikut adalah fakta, preferensi, dan profil tentang pengguna yang telah kamu pelajari dari percakapan sebelumnya:
+${memories.map((m) => `- [${m.category.toUpperCase()}] ${m.content}`).join("\n")}
+
+Gunakan memori di atas secara alami untuk menyesuaikan jawabanmu agar relevan, personal, dan konsisten tanpa perlu secara eksplisit mengatakan 'berdasarkan database memoriku' atau sejenisnya.`
+      : "";
 
   return `${BASE_SYSTEM_PROMPT}
 
-[MEMORI JANGKA PANJANG TENTANG PENGGUNA]:
-Berikut adalah fakta, preferensi, dan profil tentang pengguna yang telah kamu pelajari dari percakapan sebelumnya:
-${memoryList}
-
-Gunakan memori di atas secara alami untuk menyesuaikan jawabanmu agar relevan, personal, dan konsisten tanpa perlu secara eksplisit mengatakan 'berdasarkan database memoriku' atau sejenisnya.`;
+${temporalBlock}${memoryBlock}`;
 }
 
 export async function retrieveRelevantMemories(

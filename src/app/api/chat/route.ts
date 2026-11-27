@@ -6,6 +6,7 @@ import {
   extractAndSaveMemories,
   generateChatTitle,
 } from "@/lib/memory/service";
+import { getClientSystemContext } from "@/lib/client-context";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -59,7 +60,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { messages, chatId, userId = "user_default_01" } = body;
+    const {
+      messages,
+      chatId,
+      userId = "user_default_01",
+      clientContext,
+    } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
@@ -71,8 +77,15 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage.content || "";
 
+    const userAgentHeader = req.headers.get("user-agent") || undefined;
+    const effectiveContext =
+      clientContext || getClientSystemContext(userAgentHeader);
+
     const relevantMemories = await retrieveRelevantMemories(userPrompt, userId);
-    const systemPrompt = buildAugmentedSystemPrompt(relevantMemories);
+    const systemPrompt = buildAugmentedSystemPrompt(
+      relevantMemories,
+      effectiveContext
+    );
     const model = getChatModel();
 
     const result = await streamText({

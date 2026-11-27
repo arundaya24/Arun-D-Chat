@@ -29,3 +29,12 @@ export type AIProvider = 'google' | 'openai';
 export interface SystemPromptOptions {
   memories?: MemoryItem[];
 }
+
+export interface ClientSystemContext {
+  timeZone: string;
+  formattedDateTime: string;
+  dayOfWeek: string;
+  isoDate: string;
+  deviceOS?: string;
+  browser?: string;
+}
