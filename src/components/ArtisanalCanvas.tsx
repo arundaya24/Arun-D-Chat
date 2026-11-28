@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { AccentColor } from "@/types";
+import type { AccentColor } from "@/types";
 
 interface ArtisanalCanvasProps {
   theme?: "dark" | "light";
@@ -13,6 +13,7 @@ interface WaveColorValues {
   ambient: string;
   hemiSky: string;
   hemiGround: string;
+  key: string;
   rim: string;
   point: string;
   surface: string;
@@ -26,6 +27,7 @@ interface WaveColors {
   ambient: THREE.Color;
   hemiSky: THREE.Color;
   hemiGround: THREE.Color;
+  key: THREE.Color;
   rim: THREE.Color;
   point: THREE.Color;
   surface: THREE.Color;
@@ -39,6 +41,7 @@ const createWaveColors = (values: WaveColorValues): WaveColors => ({
   ambient: new THREE.Color(values.ambient),
   hemiSky: new THREE.Color(values.hemiSky),
   hemiGround: new THREE.Color(values.hemiGround),
+  key: new THREE.Color(values.key),
   rim: new THREE.Color(values.rim),
   point: new THREE.Color(values.point),
   surface: new THREE.Color(values.surface),
@@ -57,6 +60,7 @@ const waveColorPalettes: Record<
       ambient: "#0d4436",
       hemiSky: "#6ee7b7",
       hemiGround: "#052e16",
+      key: "#d1fae5",
       rim: "#10b981",
       point: "#34d399",
       surface: "#0c4636",
@@ -69,6 +73,7 @@ const waveColorPalettes: Record<
       ambient: "#bbf7d0",
       hemiSky: "#d1fae5",
       hemiGround: "#065f46",
+      key: "#ffffff",
       rim: "#059669",
       point: "#047857",
       surface: "#10b981",
@@ -83,6 +88,7 @@ const waveColorPalettes: Record<
       ambient: "#441b24",
       hemiSky: "#fda4af",
       hemiGround: "#450a0a",
+      key: "#ffe4e6",
       rim: "#fb7185",
       point: "#fda4af",
       surface: "#471c25",
@@ -95,6 +101,7 @@ const waveColorPalettes: Record<
       ambient: "#fee2e2",
       hemiSky: "#fff1f2",
       hemiGround: "#991b1b",
+      key: "#ffffff",
       rim: "#dc2626",
       point: "#b91c1c",
       surface: "#ef4444",
@@ -109,6 +116,7 @@ const waveColorPalettes: Record<
       ambient: "#443514",
       hemiSky: "#fde68a",
       hemiGround: "#422006",
+      key: "#fef3c7",
       rim: "#eab308",
       point: "#fde047",
       surface: "#46350e",
@@ -121,6 +129,7 @@ const waveColorPalettes: Record<
       ambient: "#fef3c7",
       hemiSky: "#fef9c3",
       hemiGround: "#92400e",
+      key: "#ffffff",
       rim: "#a16207",
       point: "#92400e",
       surface: "#ca8a04",
@@ -249,9 +258,7 @@ export function ArtisanalCanvas({
     );
     scene.add(hemiLight);
 
-    const darkKeyColor = new THREE.Color("#d1fae5");
-    const lightKeyColor = new THREE.Color("#ffffff");
-    const keyLight = new THREE.DirectionalLight(darkKeyColor, 2.75);
+    const keyLight = new THREE.DirectionalLight(initialColors.dark.key, 2.75);
     keyLight.position.set(0, 6.2, 4.0);
     scene.add(keyLight);
 
@@ -447,7 +454,7 @@ export function ArtisanalCanvas({
       );
       hemiLight.intensity = THREE.MathUtils.lerp(0.95, 0.78, t);
 
-      keyLight.color.lerpColors(darkKeyColor, lightKeyColor, t);
+      keyLight.color.lerpColors(palette.dark.key, palette.light.key, t);
       keyLight.intensity = THREE.MathUtils.lerp(2.75, 1.8, t);
 
       rimLight.color.lerpColors(palette.dark.rim, palette.light.rim, t);

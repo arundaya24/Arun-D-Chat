@@ -11,7 +11,7 @@ import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { DisplayNameModal } from "@/components/DisplayNameModal";
 import { LanguageProvider, useLanguage } from "@/components/LanguageProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { AccentColor, ChatSession } from "@/types";
+import type { AccentColor, ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
 import { generateFastTitle } from "@/lib/utils";
 import { Brain, ChevronRight, Menu, Settings, UserRound } from "lucide-react";
