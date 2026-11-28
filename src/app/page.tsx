@@ -11,7 +11,7 @@ import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { DisplayNameModal } from "@/components/DisplayNameModal";
 import { LanguageProvider, useLanguage } from "@/components/LanguageProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ChatSession } from "@/types";
+import { AccentColor, ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
 import { generateFastTitle } from "@/lib/utils";
 import { Brain, ChevronRight, Menu, Settings, UserRound } from "lucide-react";
@@ -32,6 +32,7 @@ export default function ChatPage() {
 function ChatWorkspace() {
   const { language, setLanguage, t } = useLanguage();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [accentColor, setAccentColor] = useState<AccentColor>("green");
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -92,7 +93,12 @@ function ChatWorkspace() {
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("arun_theme") as "dark" | "light" | null;
+    const storedAccent = localStorage.getItem("arun_accent");
     const storedDisplayName = localStorage.getItem("arun_display_name")?.trim();
+    const initialAccent: AccentColor =
+      storedAccent === "red" || storedAccent === "yellow"
+        ? storedAccent
+        : "green";
     if (storedDisplayName) setDisplayName(storedDisplayName);
     const initialTheme =
       storedTheme ||
@@ -100,6 +106,8 @@ function ChatWorkspace() {
         ? "dark"
         : "light");
     setTheme(initialTheme);
+    setAccentColor(initialAccent);
+    document.documentElement.dataset.accent = initialAccent;
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(initialTheme);
   }, []);
@@ -110,6 +118,16 @@ function ChatWorkspace() {
     localStorage.setItem("arun_theme", nextTheme);
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(nextTheme);
+  };
+
+  const handleAccentChange = (nextAccentColor: AccentColor) => {
+    setAccentColor(nextAccentColor);
+    document.documentElement.dataset.accent = nextAccentColor;
+    try {
+      localStorage.setItem("arun_accent", nextAccentColor);
+    } catch (error) {
+      console.error("Gagal menyimpan warna aksen:", error);
+    }
   };
 
   const handleCloseDisplayNameModal = useCallback(() => {
@@ -465,7 +483,7 @@ function ChatWorkspace() {
 
   return (
     <div className="app-shell">
-      <ArtisanalCanvas theme={theme} />
+      <ArtisanalCanvas theme={theme} accent={accentColor} />
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
@@ -515,6 +533,41 @@ function ChatWorkspace() {
                   <div className="settings-theme-row">
                     <span className="settings-section-label">{t("theme")}</span>
                     <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+                  </div>
+                  <div className="settings-accent-row">
+                    <span className="settings-section-label">
+                      {t("accentColor")}
+                    </span>
+                    <div
+                      className="settings-accent-options"
+                      role="group"
+                      aria-label={t("accentColor")}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleAccentChange("green")}
+                        className="settings-accent-option is-green active:scale-95"
+                        aria-label={t("accentGreen")}
+                        aria-pressed={accentColor === "green"}
+                        title={t("accentGreen")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAccentChange("red")}
+                        className="settings-accent-option is-red active:scale-95"
+                        aria-label={t("accentRed")}
+                        aria-pressed={accentColor === "red"}
+                        title={t("accentRed")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAccentChange("yellow")}
+                        className="settings-accent-option is-yellow active:scale-95"
+                        aria-label={t("accentYellow")}
+                        aria-pressed={accentColor === "yellow"}
+                        title={t("accentYellow")}
+                      />
+                    </div>
                   </div>
                   <div className="settings-language-row">
                     <span className="settings-section-label">{t("language")}</span>

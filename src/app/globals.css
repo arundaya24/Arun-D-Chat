@@ -738,7 +738,7 @@ input:focus-visible {
 }
 
 .settings-accent-option.is-green {
-  --swatch-color: var(--color-accent);
+  --swatch-color: #10a37f;
 }
 
 .settings-accent-option.is-red {
@@ -879,6 +879,15 @@ input:focus-visible {
 
 .chat-composer {
   background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+}
+
+.chat-submit-active {
+  background: var(--color-accent);
+  color: var(--color-btn-text);
+}
+
+.chat-submit-active:hover {
+  background: var(--color-accent-hover);
 }
 
 .chat-scroll {
