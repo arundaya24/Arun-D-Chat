@@ -9,10 +9,9 @@ import {
   Copy,
   Check,
   RotateCcw,
-  Zap,
-  Code2,
-  BrainCircuit,
-  ShieldCheck,
+  MessageCircle,
+  Lightbulb,
+  ListChecks,
 } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { useLanguage } from "./LanguageProvider";
@@ -258,22 +257,22 @@ function EmptyStateScreen({
   const { t } = useLanguage();
   const presets = [
     {
-      title: t("presetRouteTitle"),
-      desc: t("presetRouteDescription"),
-      icon: <Code2 size={15} className="suggestion-icon" />,
-      prompt: t("presetRoutePrompt"),
+      title: t("presetCasualTitle"),
+      desc: t("presetCasualDescription"),
+      icon: <MessageCircle size={15} className="suggestion-icon" />,
+      prompt: t("presetCasualPrompt"),
     },
     {
-      title: t("presetPreferenceTitle"),
-      desc: t("presetPreferenceDescription"),
-      icon: <Zap size={15} className="suggestion-icon" />,
-      prompt: t("presetPreferencePrompt"),
+      title: t("presetIdeasTitle"),
+      desc: t("presetIdeasDescription"),
+      icon: <Lightbulb size={15} className="suggestion-icon" />,
+      prompt: t("presetIdeasPrompt"),
     },
     {
-      title: t("presetVectorTitle"),
-      desc: t("presetVectorDescription"),
-      icon: <ShieldCheck size={15} className="suggestion-icon" />,
-      prompt: t("presetVectorPrompt"),
+      title: t("presetTasksTitle"),
+      desc: t("presetTasksDescription"),
+      icon: <ListChecks size={15} className="suggestion-icon" />,
+      prompt: t("presetTasksPrompt"),
     },
   ];
 

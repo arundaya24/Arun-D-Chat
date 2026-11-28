@@ -50,20 +50,21 @@ const translations = {
     welcomeHeading: "Apa yang sedang kamu kerjakan?",
     welcomeDescription:
       "Tanyakan soal kode, simpan preferensi, atau bandingkan pilihan teknis.",
-    presetRouteTitle: "Tinjau route Next.js",
-    presetRouteDescription: "Tinjau error handling dan streaming di App Router.",
-    presetRoutePrompt:
-      "Tinjau error handling dan streaming pada route Next.js App Router ini.",
-    presetPreferenceTitle: "Simpan preferensi",
-    presetPreferenceDescription:
-      "Catat stack teknologi dan preferensi kerja untuk nanti.",
-    presetPreferencePrompt:
-      "Saya bekerja dengan TypeScript dan Clean Architecture. Simpan ini sebagai preferensi untuk percakapan berikutnya.",
-    presetVectorTitle: "Bandingkan vector store",
-    presetVectorDescription:
-      "Pilih antara pgvector dan Pinecone untuk fitur memori.",
-    presetVectorPrompt:
-      "Bandingkan pgvector dan Pinecone untuk memori aplikasi AI dari sisi biaya, operasional, dan skala.",
+    presetCasualTitle: "Ngobrol santai aja",
+    presetCasualDescription:
+      "Mulai obrolan ringan, bahas random, atau sekadar cerita hari ini.",
+    presetCasualPrompt:
+      "Ayo ngobrol santai. Tanyakan bagaimana hari saya atau ajak bahas sesuatu yang ringan.",
+    presetIdeasTitle: "Bantu mikir & cari ide",
+    presetIdeasDescription:
+      "Lempar ide kasar, rencana, atau dilema kecil buat diobrolin bareng.",
+    presetIdeasPrompt:
+      "Bantu saya memikirkan ide, rencana, atau dilema kecil. Ajukan pertanyaan dan tawarkan beberapa sudut pandang.",
+    presetTasksTitle: "Bantu beresin tugas",
+    presetTasksDescription:
+      "Ringkas teks, rapihin tulisan, atau jawab pertanyaan cepat.",
+    presetTasksPrompt:
+      "Bantu saya menyelesaikan tugas. Saya mungkin perlu meringkas teks, merapikan tulisan, atau mendapat jawaban cepat.",
     loadingConversation: "Memuat percakapan...",
     processingResponse: "Memproses respon...",
     regenerateResponse: "Regenerasi",
@@ -164,20 +165,21 @@ const translations = {
     welcomeHeading: "What are you working on?",
     welcomeDescription:
       "Ask about code, save preferences, or compare technical options.",
-    presetRouteTitle: "Review a Next.js route",
-    presetRouteDescription: "Review error handling and streaming in the App Router.",
-    presetRoutePrompt:
-      "Review error handling and streaming in this Next.js App Router route.",
-    presetPreferenceTitle: "Save a preference",
-    presetPreferenceDescription:
-      "Keep a note of your tech stack and work preferences.",
-    presetPreferencePrompt:
-      "I work with TypeScript and Clean Architecture. Save this as a preference for future conversations.",
-    presetVectorTitle: "Compare vector stores",
-    presetVectorDescription:
-      "Choose between pgvector and Pinecone for a memory feature.",
-    presetVectorPrompt:
-      "Compare pgvector and Pinecone for an AI app memory feature in terms of cost, operations, and scale.",
+    presetCasualTitle: "Casual chat",
+    presetCasualDescription:
+      "Start a light chat, talk about random stuff, or share how your day is going.",
+    presetCasualPrompt:
+      "Let's have a casual chat. Ask how my day is going or bring up something light.",
+    presetIdeasTitle: "Brainstorm & ideas",
+    presetIdeasDescription:
+      "Drop rough ideas, plans, or small dilemmas to think through together.",
+    presetIdeasPrompt:
+      "Help me think through an idea, plan, or small dilemma. Ask questions and offer a few useful perspectives.",
+    presetTasksTitle: "Get tasks done",
+    presetTasksDescription:
+      "Summarize text, polish writing, or get quick answers.",
+    presetTasksPrompt:
+      "Help me get a task done. I may need a summary, polished writing, or a quick answer.",
     loadingConversation: "Loading conversation...",
     processingResponse: "Generating a response...",
     regenerateResponse: "Regenerate response",

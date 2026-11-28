@@ -224,10 +224,7 @@ input:focus-visible {
   border: 1px solid rgb(16 163 127 / 38%);
   border-radius: 9px;
   background: var(--color-accent-soft);
-  color: var(--color-accent-text);
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -0.07em;
+  color: var(--color-accent);
 }
 
 .brand-name {

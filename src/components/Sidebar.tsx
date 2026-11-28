@@ -111,7 +111,31 @@ export function Sidebar({
         <div className="sidebar-top">
           <div className="brand-row">
             <div className="brand-mark" aria-hidden="true">
-              A
+              <svg
+                viewBox="0 0 30 30"
+                width="22"
+                height="22"
+                fill="none"
+                aria-hidden="true"
+              >
+                <g
+                  stroke="currentColor"
+                  strokeWidth="1.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity=".76"
+                >
+                  <path d="M6.5 24 15 5l8.5 19M10.8 15 15 18.5 19.2 15M6.5 24l8.5-5.5 8.5 5.5" />
+                </g>
+                <g fill="currentColor">
+                  <circle cx="15" cy="5" r="2" />
+                  <circle cx="10.8" cy="15" r="1.7" />
+                  <circle cx="19.2" cy="15" r="1.7" />
+                  <circle cx="15" cy="18.5" r="1.7" />
+                  <circle cx="6.5" cy="24" r="2" />
+                  <circle cx="23.5" cy="24" r="2" />
+                </g>
+              </svg>
             </div>
             <span className="brand-name">Arun-D&apos;Chat</span>
             <button
