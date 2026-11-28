@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark h-full" suppressHydrationWarning>
-      <body className="h-dvh min-h-0 flex overflow-hidden antialiased selection:bg-emerald-500/30 selection:text-emerald-900 dark:selection:text-emerald-100">
+      <body className="h-dvh min-h-0 flex overflow-hidden antialiased">
         {children}
       </body>
     </html>

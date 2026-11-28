@@ -15,6 +15,10 @@ const translations = {
   id: {
     settings: "Pengaturan",
     theme: "Tema",
+    accentColor: "Warna aksen",
+    accentGreen: "Hijau",
+    accentRed: "Merah",
+    accentYellow: "Kuning",
     language: "Bahasa",
     chooseLanguage: "Pilih bahasa aplikasi",
     indonesian: "Bahasa Indonesia",
@@ -130,6 +134,10 @@ const translations = {
   en: {
     settings: "Settings",
     theme: "Theme",
+    accentColor: "Accent color",
+    accentGreen: "Green",
+    accentRed: "Red",
+    accentYellow: "Yellow",
     language: "Language",
     chooseLanguage: "Choose app language",
     indonesian: "Indonesian",

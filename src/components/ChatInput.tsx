@@ -83,7 +83,7 @@ export function ChatInput({
                 disabled={!hasContent}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                   hasContent
-                    ? "bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300 active:scale-95 shadow-sm cursor-pointer"
+                  ? "chat-submit-active active:scale-95 shadow-sm cursor-pointer"
                     : "bg-neutral-200 text-neutral-600 dark:bg-zinc-800 dark:text-zinc-300 cursor-not-allowed"
                 }`}
                 title={t("sendMessage")}

@@ -30,6 +30,8 @@ export interface MemoryItem {
 
 export type AIProvider = "google" | "openai";
 
+export type AccentColor = "green" | "red" | "yellow";
+
 export interface SystemPromptOptions {
   memories?: MemoryItem[];
 }
