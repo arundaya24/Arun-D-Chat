@@ -116,11 +116,14 @@ body.light,
 html,
 body {
   width: 100%;
-  min-height: 100%;
-  overflow-x: clip;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
+  display: flex;
   margin: 0;
   background: var(--color-canvas);
   color: var(--color-ink);
@@ -167,7 +170,9 @@ input:focus-visible {
   display: flex;
   width: 100%;
   height: 100dvh;
-  overflow: clip;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   background: var(--color-canvas);
 }
 
@@ -176,14 +181,18 @@ input:focus-visible {
   z-index: 40;
   display: flex;
   width: 272px;
+  height: 100dvh;
   flex: 0 0 272px;
   flex-direction: column;
+  min-height: 0;
+  max-height: 100dvh;
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
   transition: transform var(--duration-ui) var(--ease-ui);
 }
 
 .sidebar-top {
+  flex: 0 0 auto;
   padding: 22px 16px 16px;
   border-bottom: 1px solid var(--color-border);
 }
@@ -301,13 +310,16 @@ input:focus-visible {
 }
 
 .sidebar-history {
+  display: flex;
   min-height: 0;
   flex: 1;
-  overflow-y: auto;
+  flex-direction: column;
+  overflow: hidden;
   padding: 18px 10px 12px;
 }
 
 .sidebar-heading {
+  flex: 0 0 auto;
   justify-content: space-between;
   padding: 0 8px;
   color: var(--color-muted);
@@ -324,6 +336,7 @@ input:focus-visible {
 .history-search {
   display: flex;
   height: 36px;
+  flex: 0 0 auto;
   align-items: center;
   gap: 9px;
   margin: 13px 0 14px;
@@ -355,8 +368,12 @@ input:focus-visible {
 
 .history-list {
   display: flex;
+  min-height: 0;
+  flex: 1;
   flex-direction: column;
   gap: 3px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 .history-group {
@@ -450,6 +467,7 @@ input:focus-visible {
 }
 
 .sidebar-bottom {
+  flex: 0 0 auto;
   padding: 12px;
   border-top: 1px solid var(--color-border);
 }
@@ -488,16 +506,18 @@ input:focus-visible {
   z-index: 10;
   display: flex;
   min-width: 0;
-  height: 100%;
+  height: 100dvh;
   flex: 1;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   background: transparent;
 }
 
-.workspace::after {
+.workspace-body::after {
   position: absolute;
   inset: auto 0 0;
-  z-index: 10;
+  z-index: 15;
   height: 190px;
   background: linear-gradient(
     to top,
@@ -510,21 +530,12 @@ input:focus-visible {
 }
 
 .workspace-body {
+  position: relative;
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
-}
-
-.workspace-body.is-empty {
   overflow: hidden;
-}
-
-.workspace-body.is-empty .chat-scroll {
-  min-height: 0;
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 16px 220px;
 }
 
 .workspace-footer {
@@ -541,6 +552,9 @@ input:focus-visible {
 }
 
 .workspace-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   min-height: 58px;
   flex: 0 0 58px;
   justify-content: space-between;
@@ -768,11 +782,14 @@ input:focus-visible {
 }
 
 .chat-scroll {
+  position: relative;
+  z-index: 10;
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 25px 16px 220px;
+  padding: 25px 16px 176px;
   overflow-anchor: none;
+  overscroll-behavior-y: contain;
   scroll-behavior: auto;
 }
 
@@ -2069,10 +2086,6 @@ html.light .suggestion-card:not(:hover) {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .workspace-body.is-empty .chat-scroll {
-    padding: 0 16px 220px;
-  }
-
   .mobile-menu {
     display: grid;
     width: 34px;
@@ -2115,7 +2128,7 @@ html.light .suggestion-card:not(:hover) {
 }
 
 .chat-scroll {
-  padding: 18px 16px 220px;
+  padding: 18px 16px 176px;
   }
 
   .empty-state {
