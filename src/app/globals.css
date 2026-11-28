@@ -34,13 +34,13 @@ html.light,
 body.light,
 :root.light {
   color-scheme: light;
-  --color-canvas: #f6f8f6;
-  --color-sidebar: #edf2ee;
+  --color-canvas: #f8fafc;
+  --color-sidebar: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-raised: #f1f6f2;
-  --color-surface-hover: #e5ede7;
-  --color-border: #dbe4dd;
-  --color-border-strong: #c8d4cb;
+  --color-surface-raised: #f1f5f9;
+  --color-surface-hover: #e8eef4;
+  --color-border: #dce3ea;
+  --color-border-strong: #c8d1dc;
   --color-ink: #111512;
   --color-muted: #536257;
   --color-subtle: #7f9084;
@@ -62,7 +62,7 @@ body.light,
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  opacity: 1;
+  opacity: 0.3;
   mix-blend-mode: normal;
 }
 
@@ -154,9 +154,7 @@ input:focus-visible {
   flex: 0 0 272px;
   flex-direction: column;
   border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-sidebar) 76%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--color-sidebar);
   transition: transform var(--duration-ui) var(--ease-ui);
 }
 
@@ -499,9 +497,7 @@ input:focus-visible {
   gap: 16px;
   padding: 0 26px;
   border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-canvas) 74%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--color-canvas);
 }
 
 .workspace-title-wrap {
@@ -698,7 +694,7 @@ input:focus-visible {
   padding: 14px 18px;
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 4px 16px 16px 16px;
-  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  background: rgb(9 9 11 / 85%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -709,7 +705,7 @@ input:focus-visible {
   padding: 10px 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: 16px 4px 16px 16px;
-  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+  background: rgb(9 9 11 / 85%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   white-space: pre-wrap;
@@ -801,7 +797,7 @@ input:focus-visible {
   padding: 22px 24px;
   border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--color-canvas) 62%, transparent);
+  background: rgb(9 9 11 / 85%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -855,7 +851,7 @@ input:focus-visible {
   padding: 15px 16px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+  background: rgb(9 9 11 / 85%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--color-ink);
@@ -1786,12 +1782,21 @@ button.active-tactile:active {
   font-size: 10px;
 }
 
+html.light .message-row.is-assistant .message-content,
+html.light .message-content.is-user,
+html.light .empty-hero,
+html.light .suggestion-card:not(:hover) {
+  background: rgb(255 255 255 / 90%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 @media (max-width: 760px) {
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
     width: min(84vw, 300px);
-    background: color-mix(in srgb, var(--color-sidebar) 88%, transparent);
+    background: var(--color-sidebar);
     transform: translateX(-102%);
   }
 

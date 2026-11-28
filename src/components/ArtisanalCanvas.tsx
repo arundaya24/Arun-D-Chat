@@ -106,14 +106,14 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     container.appendChild(renderer.domElement);
 
     const darkAmbientColor = new THREE.Color("#0d4436");
-    const lightAmbientColor = new THREE.Color("#a7f3d0");
+    const lightAmbientColor = new THREE.Color("#d1fae5");
     const ambientLight = new THREE.AmbientLight(darkAmbientColor, 0.9);
     scene.add(ambientLight);
 
     const darkHemiSky = new THREE.Color("#6ee7b7");
     const lightHemiSky = new THREE.Color("#ecfdf5");
     const darkHemiGround = new THREE.Color("#052e16");
-    const lightHemiGround = new THREE.Color("#064e3b");
+    const lightHemiGround = new THREE.Color("#a7f3d0");
     const hemiLight = new THREE.HemisphereLight(darkHemiSky, darkHemiGround, 0.95);
     scene.add(hemiLight);
 
@@ -150,9 +150,9 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     const themeUniform = { value: targetThemeRef.current };
 
     const darkSurfaceColor = new THREE.Color("#0c4636");
-    const lightSurfaceColor = new THREE.Color("#065f46");
+    const lightSurfaceColor = new THREE.Color("#34d399");
     const darkEmissiveColor = new THREE.Color("#064e3b");
-    const lightEmissiveColor = new THREE.Color("#043b2c");
+    const lightEmissiveColor = new THREE.Color("#a7f3d0");
     const darkFresnelColor = new THREE.Color("#34d399");
     const lightFresnelColor = new THREE.Color("#10b981");
 
@@ -235,7 +235,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     };
 
     const darkWireColor = new THREE.Color("#10b981");
-    const lightWireColor = new THREE.Color("#064e3b");
+    const lightWireColor = new THREE.Color("#34d399");
     const darkWireCrestColor = new THREE.Color("#6ee7b7");
     const lightWireCrestColor = new THREE.Color("#a7f3d0");
 
@@ -244,7 +244,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       uMouse: sharedMouseUniform,
       uWireColor: { value: darkWireColor.clone() },
       uWireCrestColor: { value: darkWireCrestColor.clone() },
-      uWireOpacity: { value: 0.16 },
+      uWireOpacity: { value: 0.035 },
     };
 
     const wireMaterial = new THREE.ShaderMaterial({
@@ -253,7 +253,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       uniforms: wireUniforms,
       transparent: true,
       depthWrite: false,
-      wireframe: true,
+      wireframe: false,
     });
 
     const waveGroup = new THREE.Group();
@@ -314,7 +314,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
 
       wireUniforms.uWireColor.value.lerpColors(darkWireColor, lightWireColor, t);
       wireUniforms.uWireCrestColor.value.lerpColors(darkWireCrestColor, lightWireCrestColor, t);
-      wireUniforms.uWireOpacity.value = THREE.MathUtils.lerp(0.16, 0.18, t);
+      wireUniforms.uWireOpacity.value = 0.035;
     };
 
     applyThemeBlend(themeFactor);
