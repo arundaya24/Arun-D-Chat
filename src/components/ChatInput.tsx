@@ -59,7 +59,7 @@ export function ChatInput({
         />
 
         <div className="flex items-center justify-between px-4 pb-3 pt-1 select-none">
-          <span className="hidden sm:inline text-[11px] font-sans text-neutral-400 dark:text-neutral-500">
+          <span className="hidden sm:inline text-[11px] font-sans text-neutral-600 dark:text-neutral-400">
             Shift + Enter untuk baris baru
           </span>
           <span className="sm:hidden" />
@@ -81,8 +81,8 @@ export function ChatInput({
                 disabled={!hasContent}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                   hasContent
-                    ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:opacity-90 active:scale-95 shadow-sm cursor-pointer"
-                    : "bg-neutral-100 dark:bg-white/[0.06] text-neutral-400 dark:text-neutral-600 cursor-not-allowed opacity-60"
+                    ? "bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300 active:scale-95 shadow-sm cursor-pointer"
+                    : "bg-neutral-200 text-neutral-600 dark:bg-zinc-800 dark:text-zinc-300 cursor-not-allowed"
                 }`}
                 title="Kirim pesan"
                 aria-label="Kirim pesan"
@@ -94,7 +94,7 @@ export function ChatInput({
         </div>
       </form>
 
-      <p className="mt-2.5 text-center text-xs font-sans text-neutral-600 dark:text-neutral-400 select-none tracking-tight">
+      <p className="mt-2.5 text-center text-xs font-sans text-neutral-700 dark:text-neutral-300 select-none tracking-tight">
         Arun-D&apos;Chat dapat melakukan kesalahan. Harap verifikasi data penting secara independen.
       </p>
     </div>
