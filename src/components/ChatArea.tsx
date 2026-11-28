@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { useLanguage } from "./LanguageProvider";
 
 interface ChatAreaProps {
   messages: Message[];
@@ -39,6 +40,7 @@ export function ChatArea({
   errorMessage,
   onDismissError,
 }: ChatAreaProps) {
+  const { t } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
@@ -129,7 +131,7 @@ export function ChatArea({
               onClick={onDismissError}
               className="chat-error-dismiss active:scale-95"
             >
-              Tutup
+              {t("close")}
             </button>
           )}
         </div>
@@ -138,7 +140,7 @@ export function ChatArea({
       {messages.length === 0 && isMessagesLoading ? (
         <div className="chat-loading-placeholder">
           <div className="chat-loading-spinner" />
-          <span className="chat-loading-text">Memuat percakapan...</span>
+          <span className="chat-loading-text">{t("loadingConversation")}</span>
         </div>
       ) : messages.length === 0 ? (
         <EmptyStateScreen onSendPreset={onSendPreset} />
@@ -179,11 +181,11 @@ export function ChatArea({
                           type="button"
                           onClick={onReload}
                           className="regenerate-button active:scale-95"
-                          title="Regenerasi respon"
-                          aria-label="Regenerasi respon"
+                          title={t("regenerateResponse")}
+                          aria-label={t("regenerateResponse")}
                         >
                           <RotateCcw size={13} />
-                          <span>Regenerasi</span>
+                          <span>{t("regenerateResponse")}</span>
                         </button>
                       )}
                     </div>
@@ -208,7 +210,7 @@ export function ChatArea({
                     <span></span>
                     <span></span>
                   </div>
-                  <span className="font-mono text-[11px]">Memproses respon...</span>
+                  <span className="font-mono text-[11px]">{t("processingResponse")}</span>
                 </div>
               </div>
             </div>
@@ -222,6 +224,7 @@ export function ChatArea({
 }
 
 function CopyMessageButton({ content }: { content: string }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -239,8 +242,8 @@ function CopyMessageButton({ content }: { content: string }) {
       type="button"
       onClick={handleCopy}
       className="copy-message-button active:scale-95"
-      title={copied ? "Tersalin" : "Salin teks pesan"}
-      aria-label={copied ? "Tersalin" : "Salin teks pesan"}
+      title={copied ? t("copied") : t("copyMessage")}
+      aria-label={copied ? t("copied") : t("copyMessage")}
     >
       {copied ? <Check size={13} /> : <Copy size={13} />}
     </button>
@@ -252,27 +255,25 @@ function EmptyStateScreen({
 }: {
   onSendPreset: (text: string) => void;
 }) {
+  const { t } = useLanguage();
   const presets = [
     {
-      title: "Tinjau route Next.js",
-      desc: "Tinjau error handling dan streaming di App Router.",
+      title: t("presetRouteTitle"),
+      desc: t("presetRouteDescription"),
       icon: <Code2 size={15} className="suggestion-icon" />,
-      prompt:
-        "Tinjau error handling dan streaming pada route Next.js App Router ini.",
+      prompt: t("presetRoutePrompt"),
     },
     {
-      title: "Simpan preferensi",
-      desc: "Catat stack teknologi dan preferensi kerja untuk nanti.",
+      title: t("presetPreferenceTitle"),
+      desc: t("presetPreferenceDescription"),
       icon: <Zap size={15} className="suggestion-icon" />,
-      prompt:
-        "Saya bekerja dengan TypeScript dan Clean Architecture. Simpan ini sebagai preferensi untuk percakapan berikutnya.",
+      prompt: t("presetPreferencePrompt"),
     },
     {
-      title: "Bandingkan vector store",
-      desc: "Pilih antara pgvector dan Pinecone untuk fitur memori.",
+      title: t("presetVectorTitle"),
+      desc: t("presetVectorDescription"),
       icon: <ShieldCheck size={15} className="suggestion-icon" />,
-      prompt:
-        "Bandingkan pgvector dan Pinecone untuk memori aplikasi AI dari sisi biaya, operasional, dan skala.",
+      prompt: t("presetVectorPrompt"),
     },
   ];
 
@@ -284,10 +285,10 @@ function EmptyStateScreen({
         </div>
 
         <h1 className="empty-heading not-italic">
-          Apa yang sedang kamu kerjakan?
+          {t("welcomeHeading")}
         </h1>
         <p className="empty-description not-italic">
-          Tanyakan soal kode, simpan preferensi, atau bandingkan pilihan teknis.
+          {t("welcomeDescription")}
         </p>
       </div>
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { MemoryItem } from "@/types";
 import { formatTime } from "@/lib/utils";
+import { useLanguage } from "./LanguageProvider";
 
 interface MemoryManagerModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function MemoryManagerModal({
   userId = "user_default_01",
   onMemoriesReset,
 }: MemoryManagerModalProps) {
+  const { language, t } = useLanguage();
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -100,13 +102,13 @@ export function MemoryManagerModal({
         setIsSupabaseActive(data.storage === "supabase");
         setStatusMessage(
           data.storage === "supabase"
-            ? "Fakta baru berhasil disimpan ke database vektor pgvector."
-            : "Fakta baru disimpan pada memori lokal sesi aktif."
+            ? t("newFactSavedPgvector")
+            : t("newFactSavedLocal")
         );
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => setStatusMessage(null), 3000);
       } else {
-        alert(data.error || "Gagal menyimpan data memori");
+        alert(data.error || t("saveMemoryFailed"));
       }
     } catch (err) {
       console.error("Kesalahan menyimpan memori:", err);
@@ -116,7 +118,7 @@ export function MemoryManagerModal({
   };
 
   const handleDeleteMemory = async (id: string) => {
-    if (!confirm("Hapus catatan memori ini secara permanen?")) return;
+    if (!confirm(t("confirmDeleteMemory"))) return;
 
     try {
       const res = await fetch(`/api/memories?id=${id}`, {
@@ -133,7 +135,7 @@ export function MemoryManagerModal({
 
   const handleResetAllMemories = async () => {
     const confirmed = confirm(
-      "Apakah Anda yakin ingin menghapus seluruh data memori?\n\nTindakan ini akan menghapus semua informasi personal, fakta, dan preferensi yang diingat AI tentang Anda. Riwayat percakapan tidak akan terhapus."
+      t("confirmResetAllMemories")
     );
     if (!confirmed) return;
 
@@ -147,11 +149,11 @@ export function MemoryManagerModal({
       if (res.ok && data.success) {
         setMemories([]);
         onMemoriesReset?.();
-        setStatusMessage("Seluruh data memori berhasil direset secara permanen.");
+        setStatusMessage(t("memoryResetSuccess"));
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => setStatusMessage(null), 3500);
       } else {
-        alert(data.error || "Gagal mereset data memori");
+        alert(data.error || t("resetMemoryFailed"));
       }
     } catch (err) {
       console.error("Gagal mereset memori:", err);
@@ -163,13 +165,22 @@ export function MemoryManagerModal({
   if (!isOpen) return null;
 
   const categories = [
-    { id: "all", label: "Semua" },
-    { id: "preference", label: "Preferensi" },
-    { id: "fact", label: "Fakta" },
-    { id: "profile", label: "Profil" },
-    { id: "work", label: "Pekerjaan" },
-    { id: "goal", label: "Tujuan" },
+    { id: "all", label: t("categoryAll") },
+    { id: "preference", label: t("categoryPreference") },
+    { id: "fact", label: t("categoryFact") },
+    { id: "profile", label: t("categoryProfile") },
+    { id: "work", label: t("categoryWork") },
+    { id: "goal", label: t("categoryGoal") },
   ];
+
+  const categoryLabels: Record<string, string> = {
+    preference: t("categoryPreference"),
+    fact: t("categoryFact"),
+    profile: t("categoryProfile"),
+    work: t("categoryWork"),
+    goal: t("categoryGoal"),
+    general: t("categoryGeneral"),
+  };
 
   const filteredMemories = memories.filter((m) => {
     const matchesSearch =
@@ -194,13 +205,15 @@ export function MemoryManagerModal({
             </div>
             <div>
               <h2 className="modal-title">
-                <span>Memori Terindeks</span>
+                <span>{t("memoryIndexed")}</span>
                 <span className="modal-tag-badge">
-                  {isSupabaseActive ? "pgvector RAG" : "Memori Lokal"}
+                  {isSupabaseActive
+                    ? t("memoryBackendPgvector")
+                    : t("memoryBackendLocal")}
                 </span>
               </h2>
               <p className="modal-subtitle">
-                Fakta teknis dan preferensi kerja yang diindeks secara otomatis.
+                {t("memorySubtitle")}
               </p>
             </div>
           </div>
@@ -208,7 +221,7 @@ export function MemoryManagerModal({
             type="button"
             onClick={onClose}
             className="modal-close-button active:scale-95"
-            aria-label="Tutup jendela memori"
+            aria-label={t("closeMemoryWindow")}
           >
             <X size={15} />
           </button>
@@ -227,11 +240,11 @@ export function MemoryManagerModal({
               <Search size={14} className="modal-search-icon" aria-hidden="true" />
               <input
                 type="search"
-                placeholder="Saring berdasarkan kata kunci..."
+                placeholder={t("memorySearch")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="modal-search-input"
-                aria-label="Cari memori"
+                aria-label={t("memorySearch")}
               />
             </div>
             {memories.length > 0 && (
@@ -240,10 +253,10 @@ export function MemoryManagerModal({
                 onClick={handleResetAllMemories}
                 disabled={resetting}
                 className="modal-danger-btn active:scale-95"
-                title="Hapus semua memori"
+                title={t("deleteAllMemories")}
               >
                 <Trash2 size={13} />
-                <span>{resetting ? "Mereset..." : "Reset Memori"}</span>
+                <span>{resetting ? t("resetting") : t("resetMemory")}</span>
               </button>
             )}
             <button
@@ -252,7 +265,7 @@ export function MemoryManagerModal({
               className="modal-primary-btn active:scale-95"
             >
               <Plus size={14} />
-              <span>{showAddForm ? "Batal" : "Tambah Fakta"}</span>
+              <span>{showAddForm ? t("cancel") : t("addFact")}</span>
             </button>
           </div>
 
@@ -260,31 +273,31 @@ export function MemoryManagerModal({
             <form onSubmit={handleAddMemory} className="modal-form-card">
               <div className="modal-form-title">
                 <Sparkles size={14} />
-                <span>Input Fakta Manual</span>
+                <span>{t("manualFactTitle")}</span>
               </div>
               <textarea
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
-                placeholder="Contoh: Pengguna adalah senior engineer dengan fokus arsitektur sistem dan TypeScript."
+                placeholder={t("memoryExample")}
                 rows={2}
                 className="modal-form-textarea"
               />
               <div className="modal-form-footer">
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-[var(--color-muted)] font-mono">
-                    Kategori:
+                    {t("category")}
                   </label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     className="modal-form-select"
                   >
-                    <option value="preference">Preferensi</option>
-                    <option value="fact">Fakta</option>
-                    <option value="profile">Profil</option>
-                    <option value="work">Pekerjaan</option>
-                    <option value="goal">Tujuan</option>
-                    <option value="general">Umum</option>
+                    <option value="preference">{t("categoryPreference")}</option>
+                    <option value="fact">{t("categoryFact")}</option>
+                    <option value="profile">{t("categoryProfile")}</option>
+                    <option value="work">{t("categoryWork")}</option>
+                    <option value="goal">{t("categoryGoal")}</option>
+                    <option value="general">{t("categoryGeneral")}</option>
                   </select>
                 </div>
                 <button
@@ -295,10 +308,10 @@ export function MemoryManagerModal({
                   {adding ? (
                     <>
                       <Loader2 size={13} className="animate-spin" />
-                      <span>Menyimpan...</span>
+                      <span>{t("saving")}</span>
                     </>
                   ) : (
-                    <span>Simpan ke Vektor</span>
+                    <span>{t("saveToVector")}</span>
                   )}
                 </button>
               </div>
@@ -325,16 +338,16 @@ export function MemoryManagerModal({
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-[var(--color-muted)] gap-2">
               <Loader2 size={18} className="animate-spin text-[var(--color-accent)]" />
-              <p className="text-xs font-mono">Memuat index memori...</p>
+              <p className="text-xs font-mono">{t("loadingMemoryIndex")}</p>
             </div>
           ) : filteredMemories.length === 0 ? (
             <div className="text-center py-12 px-4 border border-dashed border-[var(--color-border)] rounded-xl text-[var(--color-muted)]">
               <Brain size={24} className="mx-auto mb-2 text-[var(--color-subtle)]" />
               <p className="text-xs font-medium text-[var(--color-ink)]">
-                Belum ada data memori yang tersimpan.
+                {t("noMemoryTitle")}
               </p>
               <p className="text-[11px] text-[var(--color-subtle)] mt-1 max-w-sm mx-auto">
-                Fakta baru akan otomatis diekstrak saat Anda berdiskusi, atau Anda dapat menambahkannya secara manual.
+                {t("noMemoryDescription")}
               </p>
             </div>
           ) : (
@@ -344,10 +357,13 @@ export function MemoryManagerModal({
                   <div className="flex items-center gap-2">
                     <span className="modal-item-badge">
                       <Tag size={10} />
-                      {m.category.toUpperCase()}
+                      {categoryLabels[m.category] || m.category}
                     </span>
                     <span className="modal-item-time">
-                      {formatTime(m.created_at)}
+                      {formatTime(
+                        m.created_at,
+                        language === "id" ? "id-ID" : "en-US"
+                      )}
                     </span>
                   </div>
                   <p className="modal-item-text">
@@ -358,8 +374,8 @@ export function MemoryManagerModal({
                   type="button"
                   onClick={() => handleDeleteMemory(m.id)}
                   className="modal-delete-btn active:scale-95"
-                  title="Hapus memori"
-                  aria-label="Hapus memori"
+                  title={t("deleteMemory")}
+                  aria-label={t("deleteMemory")}
                 >
                   <Trash2 size={13} />
                 </button>
@@ -370,12 +386,13 @@ export function MemoryManagerModal({
 
         <footer className="modal-footer">
           <span className="font-mono">
-            Total: {String(memories.length).padStart(2, "0")} entri
+            {t("total")} {String(memories.length).padStart(2, "0")}{" "}
+            {t("entries")}
           </span>
           <span className="modal-footer-mono">
             {isSupabaseActive
-              ? "pgvector Cosine Distance Matching"
-              : "Penyimpanan Memori Lokal Sesi Aktif"}
+              ? t("memoryFooterPgvector")
+              : t("memoryFooterLocal")}
           </span>
         </footer>
       </div>

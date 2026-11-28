@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { Check, Copy } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 interface MarkdownRendererProps {
   content: string;
@@ -92,6 +93,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 }
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -107,22 +109,22 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   return (
     <div className="code-block">
       <div className="code-block-header">
-        <span className="code-language">{language || "teks"}</span>
+        <span className="code-language">{language || t("plainText")}</span>
         <button
           type="button"
           onClick={handleCopy}
           className="copy-code-button active:scale-95"
-          title="Salin Kode"
+          title={copied ? t("copiedCode") : t("copyCode")}
         >
           {copied ? (
             <>
               <Check size={14} />
-              <span>Tersalin!</span>
+              <span>{t("copiedCode")}</span>
             </>
           ) : (
             <>
               <Copy size={14} />
-              <span>Salin</span>
+              <span>{t("copy")}</span>
             </>
           )}
         </button>

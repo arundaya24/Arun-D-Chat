@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Check, UserRound, X } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 interface DisplayNameModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export function DisplayNameModal({
   onClose,
   onSave,
 }: DisplayNameModalProps) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState(currentName);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,14 +44,14 @@ export function DisplayNameModal({
     const name = draft.trim();
 
     if (!name) {
-      setErrorMessage("Nama tidak boleh kosong.");
+      setErrorMessage(t("nameRequired"));
       return;
     }
 
     if (onSave(name)) {
       onClose();
     } else {
-      setErrorMessage("Nama gagal disimpan. Coba lagi.");
+      setErrorMessage(t("nameSaveFailed"));
     }
   };
 
@@ -73,10 +75,10 @@ export function DisplayNameModal({
             </div>
             <div>
               <h2 className="modal-title" id="display-name-title">
-                Nama tampilan
+                {t("yourName")}
               </h2>
               <p className="modal-subtitle">
-                Nama ini akan tampil di atas pesan yang kamu kirim.
+                {t("nameDescription")}
               </p>
             </div>
           </div>
@@ -84,7 +86,7 @@ export function DisplayNameModal({
             type="button"
             onClick={onClose}
             className="modal-close-button active:scale-95"
-            aria-label="Tutup pengaturan nama"
+            aria-label={t("closeNameSettings")}
           >
             <X size={15} />
           </button>
@@ -92,7 +94,7 @@ export function DisplayNameModal({
 
         <form onSubmit={handleSubmit} className="display-name-form">
           <label htmlFor="display-name-input" className="display-name-label">
-            Nama pengguna
+            {t("yourName")}
           </label>
           <input
             ref={inputRef}
@@ -120,11 +122,11 @@ export function DisplayNameModal({
               onClick={onClose}
               className="display-name-cancel active:scale-95"
             >
-              Batal
+              {t("cancel")}
             </button>
             <button type="submit" className="modal-primary-btn active:scale-95">
               <Check size={14} />
-              Simpan
+              {t("save")}
             </button>
           </div>
         </form>

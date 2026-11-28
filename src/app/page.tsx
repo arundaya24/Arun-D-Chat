@@ -9,6 +9,7 @@ import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
 import { MemoryManagerModal } from "@/components/MemoryManagerModal";
 import { DisplayNameModal } from "@/components/DisplayNameModal";
+import { LanguageProvider, useLanguage } from "@/components/LanguageProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
@@ -21,8 +22,17 @@ const ArtisanalCanvas = dynamic(
 );
 
 export default function ChatPage() {
+  return (
+    <LanguageProvider>
+      <ChatWorkspace />
+    </LanguageProvider>
+  );
+}
+
+function ChatWorkspace() {
+  const { language, setLanguage, t } = useLanguage();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [displayName, setDisplayName] = useState("Anda");
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
@@ -176,7 +186,7 @@ export default function ChatPage() {
     },
     onError: (err) => {
       console.warn("Kesalahan streaming AI:", err);
-      let msg = err.message || "Terjadi kesalahan saat berkomunikasi dengan AI.";
+      let msg = err.message || t("chatCommunicationError");
       try {
         if (
           typeof err.message === "string" &&
@@ -340,7 +350,7 @@ export default function ChatPage() {
   }, [handleNewChat, isMemoryModalOpen, isSidebarOpen]);
 
   const handleDeleteChat = async (chatId: string) => {
-    if (!confirm("Hapus percakapan ini secara permanen?")) return;
+    if (!confirm(t("confirmDeleteConversation"))) return;
 
     messagesCacheRef.current.delete(chatId);
 
@@ -450,7 +460,7 @@ export default function ChatPage() {
   };
 
   const activeChatTitle =
-    chats.find((chat) => chat.id === activeChatId)?.title || "Percakapan baru";
+    chats.find((chat) => chat.id === activeChatId)?.title || t("newChat");
   const isEmptyChat = messages.length === 0 && !isMessagesLoading;
 
   return (
@@ -475,7 +485,7 @@ export default function ChatPage() {
               type="button"
               onClick={() => setIsSidebarOpen(true)}
               className="mobile-menu active:scale-95"
-              aria-label="Buka riwayat percakapan"
+              aria-label={t("openHistory")}
             >
               <Menu size={17} />
             </button>
@@ -488,23 +498,50 @@ export default function ChatPage() {
                 type="button"
                 onClick={() => setIsSettingsOpen((open) => !open)}
                 className="settings-trigger active:scale-95"
-                aria-label="Pengaturan"
+                aria-label={t("settings")}
+                title={t("settings")}
                 aria-expanded={isSettingsOpen}
                 aria-controls="settings-menu"
               >
-                <Settings size={15} aria-hidden="true" />
-                <span>Pengaturan</span>
+                <Settings size={16} aria-hidden="true" />
               </button>
               {isSettingsOpen && (
                 <div
                   id="settings-menu"
                   className="settings-menu"
                   role="group"
-                  aria-label="Pengaturan"
+                  aria-label={t("settings")}
                 >
                   <div className="settings-theme-row">
-                    <span className="settings-section-label">Tampilan</span>
+                    <span className="settings-section-label">{t("theme")}</span>
                     <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+                  </div>
+                  <div className="settings-language-row">
+                    <span className="settings-section-label">{t("language")}</span>
+                    <div
+                      className="settings-language-toggle"
+                      role="group"
+                      aria-label={t("chooseLanguage")}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setLanguage("id")}
+                        className="settings-language-option active:scale-95"
+                        aria-label={t("indonesian")}
+                        aria-pressed={language === "id"}
+                      >
+                        ID
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLanguage("en")}
+                        className="settings-language-option active:scale-95"
+                        aria-label={t("english")}
+                        aria-pressed={language === "en"}
+                      >
+                        EN
+                      </button>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -516,8 +553,8 @@ export default function ChatPage() {
                   >
                     <UserRound size={15} aria-hidden="true" />
                     <span className="settings-item-copy">
-                      <span>Nama tampilan</span>
-                      <small>{displayName}</small>
+                      <span>{t("yourName")}</span>
+                      <small>{displayName || t("defaultUserName")}</small>
                     </span>
                     <ChevronRight size={14} aria-hidden="true" />
                   </button>
@@ -531,8 +568,8 @@ export default function ChatPage() {
                   >
                     <Brain size={15} aria-hidden="true" />
                     <span className="settings-item-copy">
-                      <span>Memori AI</span>
-                      <small>Kelola fakta dan preferensi</small>
+                      <span>{t("memoryAI")}</span>
+                      <small>{t("manageFacts")}</small>
                     </span>
                     <span className="settings-count">{memoryCount}</span>
                   </button>
@@ -545,7 +582,7 @@ export default function ChatPage() {
         <div className={`workspace-body${isEmptyChat ? " is-empty" : ""}`}>
           <ChatArea
             messages={messages}
-            displayName={displayName}
+            displayName={displayName || t("defaultUserName")}
             isLoading={isLoading}
             isMessagesLoading={isMessagesLoading}
             activeChatId={activeChatId}
@@ -578,7 +615,7 @@ export default function ChatPage() {
       />
       <DisplayNameModal
         isOpen={isDisplayNameModalOpen}
-        currentName={displayName}
+        currentName={displayName || t("defaultUserName")}
         onClose={handleCloseDisplayNameModal}
         onSave={handleSaveDisplayName}
       />

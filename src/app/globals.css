@@ -562,10 +562,11 @@ input:focus-visible {
 
 .settings-trigger {
   display: inline-flex;
+  width: 36px;
   min-height: 34px;
   align-items: center;
-  gap: 8px;
-  padding: 0 10px;
+  justify-content: center;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-surface);
@@ -615,6 +616,51 @@ input:focus-visible {
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 500;
+}
+
+.settings-language-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-language-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+}
+
+.settings-language-option {
+  display: grid;
+  min-width: 32px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  transition:
+    background-color var(--duration-ui) var(--ease-ui),
+    color var(--duration-ui) var(--ease-ui);
+}
+
+.settings-language-option:hover {
+  color: var(--color-ink);
+}
+
+.settings-language-option[aria-pressed="true"] {
+  border-color: var(--color-border);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
 }
 
 .settings-item {

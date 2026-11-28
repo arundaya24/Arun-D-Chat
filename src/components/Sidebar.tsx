@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { ChatSession } from "@/types";
+import { useLanguage } from "./LanguageProvider";
 
 interface SidebarProps {
   chats: ChatSession[];
@@ -39,6 +40,7 @@ export function Sidebar({
   onToggleSidebar,
   memoryCount,
 }: SidebarProps) {
+  const { t } = useLanguage();
   const [filterQuery, setFilterQuery] = useState("");
 
   useEffect(() => {
@@ -85,14 +87,14 @@ export function Sidebar({
     }
 
     const groups: ChatGroup[] = [];
-    if (today.length > 0) groups.push({ title: "Hari Ini", chats: today });
-    if (yesterday.length > 0) groups.push({ title: "Kemarin", chats: yesterday });
+    if (today.length > 0) groups.push({ title: t("today"), chats: today });
+    if (yesterday.length > 0) groups.push({ title: t("yesterday"), chats: yesterday });
     if (previous7Days.length > 0)
-      groups.push({ title: "7 Hari Terakhir", chats: previous7Days });
-    if (older.length > 0) groups.push({ title: "Lebih Lama", chats: older });
+      groups.push({ title: t("last7Days"), chats: previous7Days });
+    if (older.length > 0) groups.push({ title: t("older"), chats: older });
 
     return groups;
-  }, [filteredChats]);
+  }, [filteredChats, t]);
 
   return (
     <>
@@ -101,7 +103,7 @@ export function Sidebar({
           type="button"
           onClick={onToggleSidebar}
           className="sidebar-backdrop"
-          aria-label="Tutup navigasi"
+          aria-label={t("closeNavigation")}
         />
       )}
 
@@ -116,7 +118,7 @@ export function Sidebar({
               type="button"
               onClick={onToggleSidebar}
               className="sidebar-close active:scale-95"
-              aria-label="Tutup navigasi"
+              aria-label={t("closeNavigation")}
             >
               <X size={16} />
             </button>
@@ -129,7 +131,7 @@ export function Sidebar({
           >
             <span className="sidebar-new-chat-label">
               <Plus size={16} />
-              Percakapan baru
+              {t("newChat")}
             </span>
             <span className="new-chat-shortcut">N</span>
           </button>
@@ -137,7 +139,7 @@ export function Sidebar({
 
         <div className="sidebar-history">
           <div className="sidebar-heading">
-            <span>Percakapan</span>
+            <span>{t("conversations")}</span>
             <span className="mono-label">
               {String(chats.length).padStart(2, "0")}
             </span>
@@ -149,16 +151,16 @@ export function Sidebar({
               type="search"
               value={filterQuery}
               onChange={(event) => setFilterQuery(event.target.value)}
-              placeholder="Cari percakapan"
-              aria-label="Cari percakapan"
+              placeholder={t("searchConversations")}
+              aria-label={t("searchConversations")}
             />
           </label>
 
           {groupedChats.length === 0 ? (
             <div className="history-empty">
               {filterQuery
-                ? "Tidak ada percakapan yang cocok."
-                : "Percakapan yang kamu mulai akan muncul di sini."}
+                ? t("noMatchingConversations")
+                : t("historyEmpty")}
             </div>
           ) : (
             <div className="history-list">
@@ -188,8 +190,8 @@ export function Sidebar({
                             onDeleteChat(chat.id);
                           }}
                           className="history-delete active:scale-95"
-                          title="Hapus percakapan"
-                          aria-label={`Hapus ${chat.title}`}
+                          title={t("deleteConversation")}
+                          aria-label={`${t("deleteConversation")}: ${chat.title}`}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -210,7 +212,7 @@ export function Sidebar({
           >
             <span className="memory-action-label">
               <Brain size={15} />
-              Kelola memori
+              {t("manageMemory")}
             </span>
             <span className="memory-count">{memoryCount}</span>
           </button>

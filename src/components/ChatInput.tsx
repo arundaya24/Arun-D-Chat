@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { ArrowUp, Square } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 interface ChatInputProps {
   input: string;
@@ -18,6 +19,7 @@ export function ChatInput({
   isLoading,
   stop,
 }: ChatInputProps) {
+  const { t } = useLanguage();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasContent = Boolean(input.trim());
 
@@ -53,14 +55,14 @@ export function ChatInput({
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Tulis pesan..."
+          placeholder={t("messagePlaceholder")}
           rows={1}
           className="w-full min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-2 text-sm md:text-base font-sans not-italic text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 leading-relaxed"
         />
 
         <div className="flex items-center justify-between px-4 pb-3 pt-1 select-none">
           <span className="hidden sm:inline text-[11px] font-sans not-italic text-neutral-600 dark:text-neutral-400">
-            Shift + Enter untuk baris baru
+            {t("newLineHint")}
           </span>
           <span className="sm:hidden" />
 
@@ -70,8 +72,8 @@ export function ChatInput({
                 type="button"
                 onClick={stop}
                 className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 transition-all duration-150 active:scale-95 shadow-sm"
-                title="Hentikan pembuatan respon"
-                aria-label="Hentikan respon"
+                title={t("stopGenerationTitle")}
+                aria-label={t("stopGeneration")}
               >
                 <Square size={13} fill="currentColor" />
               </button>
@@ -84,8 +86,8 @@ export function ChatInput({
                     ? "bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300 active:scale-95 shadow-sm cursor-pointer"
                     : "bg-neutral-200 text-neutral-600 dark:bg-zinc-800 dark:text-zinc-300 cursor-not-allowed"
                 }`}
-                title="Kirim pesan"
-                aria-label="Kirim pesan"
+                title={t("sendMessage")}
+                aria-label={t("sendMessage")}
               >
                 <ArrowUp size={16} strokeWidth={2.2} />
               </button>
@@ -95,7 +97,7 @@ export function ChatInput({
       </form>
 
       <p className="mt-2.5 text-center text-xs font-sans text-neutral-700 dark:text-neutral-300 select-none tracking-tight">
-        Arun-D&apos;Chat dapat melakukan kesalahan. Harap verifikasi data penting secara independen.
+        {t("disclaimer")}
       </p>
     </div>
   );

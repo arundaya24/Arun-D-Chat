@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Sun, Moon } from "lucide-react";
+import { useLanguage } from "./LanguageProvider";
 
 interface ThemeToggleProps {
   theme: "dark" | "light";
@@ -10,18 +11,19 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ theme, onToggle }: ThemeToggleProps) {
   const isLight = theme === "light";
+  const { t } = useLanguage();
 
   return (
-    <div className="theme-toggle-control" role="group" aria-label="Pilih tema">
+    <div className="theme-toggle-control" role="group" aria-label={t("chooseTheme")}>
       <button
         type="button"
         onClick={() => {
           if (!isLight) onToggle();
         }}
         className="theme-toggle-option active:scale-95"
-        aria-label="Mode terang"
+        aria-label={t("lightMode")}
         aria-pressed={isLight}
-        title="Mode terang"
+        title={t("lightMode")}
       >
         <Sun size={15} aria-hidden="true" />
       </button>
@@ -31,9 +33,9 @@ export function ThemeToggle({ theme, onToggle }: ThemeToggleProps) {
           if (isLight) onToggle();
         }}
         className="theme-toggle-option active:scale-95"
-        aria-label="Mode gelap"
+        aria-label={t("darkMode")}
         aria-pressed={!isLight}
-        title="Mode gelap"
+        title={t("darkMode")}
       >
         <Moon size={15} aria-hidden="true" />
       </button>
