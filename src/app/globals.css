@@ -4,11 +4,11 @@
 
 :root {
   color-scheme: dark;
-  --color-canvas: #111411;
-  --color-sidebar: #0c0f0d;
-  --color-surface: #171b18;
-  --color-surface-raised: #1d221e;
-  --color-surface-hover: #222823;
+  --color-canvas: #151a16;
+  --color-sidebar: #111713;
+  --color-surface: #1a201b;
+  --color-surface-raised: #202720;
+  --color-surface-hover: #272f29;
   --color-border: #2a302c;
   --color-border-strong: #3a433d;
   --color-ink: #edf1ed;
@@ -20,7 +20,7 @@
   --color-accent-text: #8bd5bc;
   --color-btn-text: #f3fbf7;
   --color-danger: #e4867b;
-  --color-code-bg: #101411;
+  --color-code-bg: #171c18;
   --color-code-text: #d3dbd4;
   --color-modal-backdrop: rgb(8 10 9 / 82%);
   --color-modal-shadow: 0 16px 40px -12px rgb(0 0 0 / 60%);
@@ -494,6 +494,21 @@ input:focus-visible {
   background: transparent;
 }
 
+.workspace::after {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 10;
+  height: 190px;
+  background: linear-gradient(
+    to top,
+    var(--color-canvas) 0%,
+    color-mix(in srgb, var(--color-canvas) 78%, transparent) 48%,
+    transparent 100%
+  );
+  content: "";
+  pointer-events: none;
+}
+
 .workspace-body {
   display: flex;
   min-height: 0;
@@ -502,25 +517,27 @@ input:focus-visible {
 }
 
 .workspace-body.is-empty {
-  justify-content: safe center;
-  gap: 16px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .workspace-body.is-empty .chat-scroll {
   min-height: 0;
-  flex: 0 0 auto;
-  overflow: visible;
-  padding: 0 28px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 220px;
 }
 
-.workspace-body.is-empty .empty-state {
-  min-height: 0;
-  padding: 0;
+.workspace-footer {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.workspace-body.is-empty .workspace-footer {
-  flex: 0 0 auto;
+.workspace-footer > * {
+  pointer-events: none;
 }
 
 .workspace-header {
@@ -746,11 +763,15 @@ input:focus-visible {
   flex-shrink: 0;
 }
 
+.chat-composer {
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+}
+
 .chat-scroll {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 25px 16px 20px;
+  padding: 25px 16px 220px;
   overflow-anchor: none;
   scroll-behavior: auto;
 }
@@ -862,7 +883,7 @@ input:focus-visible {
   padding: 14px 18px;
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 4px 16px 16px 16px;
-  background: rgb(9 9 11 / 85%);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -873,7 +894,7 @@ input:focus-visible {
   padding: 10px 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: 16px 4px 16px 16px;
-  background: rgb(9 9 11 / 85%);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   white-space: pre-wrap;
@@ -977,7 +998,7 @@ html.light .copy-code-button:hover {
   padding: 22px 24px;
   border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
   border-radius: 16px;
-  background: rgb(9 9 11 / 85%);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -1033,7 +1054,7 @@ html.light .copy-code-button:hover {
   padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: rgb(9 9 11 / 85%);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--color-ink);
@@ -2004,6 +2025,7 @@ button.active-tactile:active {
 
 html.light .message-row.is-assistant .message-content,
 html.light .message-content.is-user,
+html.light .chat-composer,
 html.light .empty-hero,
 html.light .suggestion-card:not(:hover) {
   background: rgb(255 255 255 / 90%);
