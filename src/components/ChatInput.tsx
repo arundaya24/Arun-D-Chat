@@ -53,7 +53,7 @@ export function ChatInput({
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Ketik pertanyaan atau instruksi..."
+          placeholder="Tulis pesan..."
           rows={1}
           className="w-full min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-2 text-sm md:text-base font-sans text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 leading-relaxed"
         />

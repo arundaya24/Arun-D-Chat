@@ -106,14 +106,14 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     container.appendChild(renderer.domElement);
 
     const darkAmbientColor = new THREE.Color("#0d4436");
-    const lightAmbientColor = new THREE.Color("#d1fae5");
+    const lightAmbientColor = new THREE.Color("#bbf7d0");
     const ambientLight = new THREE.AmbientLight(darkAmbientColor, 0.9);
     scene.add(ambientLight);
 
     const darkHemiSky = new THREE.Color("#6ee7b7");
-    const lightHemiSky = new THREE.Color("#ecfdf5");
+    const lightHemiSky = new THREE.Color("#d1fae5");
     const darkHemiGround = new THREE.Color("#052e16");
-    const lightHemiGround = new THREE.Color("#a7f3d0");
+    const lightHemiGround = new THREE.Color("#065f46");
     const hemiLight = new THREE.HemisphereLight(darkHemiSky, darkHemiGround, 0.95);
     scene.add(hemiLight);
 
@@ -124,13 +124,13 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     scene.add(keyLight);
 
     const darkRimColor = new THREE.Color("#10b981");
-    const lightRimColor = new THREE.Color("#34d399");
+    const lightRimColor = new THREE.Color("#059669");
     const rimLight = new THREE.DirectionalLight(darkRimColor, 3.1);
     rimLight.position.set(-5.2, 3.4, -3.6);
     scene.add(rimLight);
 
     const darkPointColor = new THREE.Color("#34d399");
-    const lightPointColor = new THREE.Color("#10b981");
+    const lightPointColor = new THREE.Color("#047857");
     const pointLight = new THREE.PointLight(darkPointColor, 6.8, 15, 1.5);
     pointLight.position.set(0.4, 1.9, 2.1);
     scene.add(pointLight);
@@ -150,9 +150,9 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     const themeUniform = { value: targetThemeRef.current };
 
     const darkSurfaceColor = new THREE.Color("#0c4636");
-    const lightSurfaceColor = new THREE.Color("#34d399");
+    const lightSurfaceColor = new THREE.Color("#10b981");
     const darkEmissiveColor = new THREE.Color("#064e3b");
-    const lightEmissiveColor = new THREE.Color("#a7f3d0");
+    const lightEmissiveColor = new THREE.Color("#064e3b");
     const darkFresnelColor = new THREE.Color("#34d399");
     const lightFresnelColor = new THREE.Color("#10b981");
 
@@ -257,7 +257,8 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     });
 
     const waveGroup = new THREE.Group();
-    waveGroup.position.set(0, -0.18, 0);
+    waveGroup.position.set(0, -0.62, 0);
+    waveGroup.scale.setScalar(0.9);
     waveGroup.rotation.x = -0.82;
 
     const surfaceMesh = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
@@ -286,31 +287,31 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     const applyThemeBlend = (t: number) => {
       surfaceMaterial.color.lerpColors(darkSurfaceColor, lightSurfaceColor, t);
       surfaceMaterial.emissive.lerpColors(darkEmissiveColor, lightEmissiveColor, t);
-      surfaceMaterial.emissiveIntensity = THREE.MathUtils.lerp(0.42, 0.24, t);
-      surfaceMaterial.metalness = THREE.MathUtils.lerp(0.44, 0.28, t);
-      surfaceMaterial.roughness = THREE.MathUtils.lerp(0.28, 0.36, t);
-      surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.48, 0.36, t);
+      surfaceMaterial.emissiveIntensity = THREE.MathUtils.lerp(0.42, 0.18, t);
+      surfaceMaterial.metalness = THREE.MathUtils.lerp(0.44, 0.2, t);
+      surfaceMaterial.roughness = THREE.MathUtils.lerp(0.28, 0.42, t);
+      surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.48, 0.28, t);
       surfaceMaterial.opacity = THREE.MathUtils.lerp(0.92, 0.95, t);
 
       fresnelColorUniform.value.lerpColors(darkFresnelColor, lightFresnelColor, t);
-      fresnelStrengthUniform.value = THREE.MathUtils.lerp(0.85, 0.45, t);
+      fresnelStrengthUniform.value = THREE.MathUtils.lerp(0.85, 0.38, t);
       themeUniform.value = t;
 
       ambientLight.color.lerpColors(darkAmbientColor, lightAmbientColor, t);
-      ambientLight.intensity = THREE.MathUtils.lerp(0.9, 1.0, t);
+      ambientLight.intensity = THREE.MathUtils.lerp(0.9, 0.72, t);
 
       hemiLight.color.lerpColors(darkHemiSky, lightHemiSky, t);
       hemiLight.groundColor.lerpColors(darkHemiGround, lightHemiGround, t);
-      hemiLight.intensity = THREE.MathUtils.lerp(0.95, 1.15, t);
+      hemiLight.intensity = THREE.MathUtils.lerp(0.95, 0.78, t);
 
       keyLight.color.lerpColors(darkKeyColor, lightKeyColor, t);
-      keyLight.intensity = THREE.MathUtils.lerp(2.75, 2.55, t);
+      keyLight.intensity = THREE.MathUtils.lerp(2.75, 1.8, t);
 
       rimLight.color.lerpColors(darkRimColor, lightRimColor, t);
-      rimLight.intensity = THREE.MathUtils.lerp(3.1, 2.25, t);
+      rimLight.intensity = THREE.MathUtils.lerp(3.1, 1.75, t);
 
       pointLight.color.lerpColors(darkPointColor, lightPointColor, t);
-      pointLight.intensity = THREE.MathUtils.lerp(6.8, 5.2, t);
+      pointLight.intensity = THREE.MathUtils.lerp(6.8, 3.8, t);
 
       wireUniforms.uWireColor.value.lerpColors(darkWireColor, lightWireColor, t);
       wireUniforms.uWireCrestColor.value.lerpColors(darkWireCrestColor, lightWireCrestColor, t);
@@ -338,7 +339,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
 
       if (!isReducedMotion) {
         pointLight.position.x = Math.sin(elapsedTime * 0.35) * 2.2 + mouseCurrent.x * 1.4;
-        pointLight.position.y = 1.85 + Math.cos(elapsedTime * 0.28) * 0.35 + mouseCurrent.y * 0.6;
+        pointLight.position.y = 1.55 + Math.cos(elapsedTime * 0.28) * 0.3 + mouseCurrent.y * 0.5;
       }
 
       renderer.render(scene, camera);
@@ -381,7 +382,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
   return (
     <div
       ref={containerRef}
-      className="artisanal-canvas-container"
+      className={`artisanal-canvas-container${theme === "light" ? " is-light" : ""}`}
       aria-hidden="true"
     />
   );

@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { Message } from "ai";
 import {
   Sparkles,
+  MessageSquare,
   User,
   Copy,
   Check,
@@ -251,25 +252,25 @@ function EmptyStateScreen({
 }) {
   const presets = [
     {
-      title: "Arsitektur Next.js 14",
-      desc: "Eksplorasi App Router, Server Actions, streaming SSR, dan pattern optimasi data fetching.",
+      title: "Tinjau route Next.js",
+      desc: "Tinjau error handling dan streaming di App Router.",
       icon: <Code2 size={15} className="suggestion-icon" />,
       prompt:
-        "Tunjukkan best practice error handling dan streaming response pada Next.js 14 App Router API route.",
+        "Tinjau error handling dan streaming pada route Next.js App Router ini.",
     },
     {
-      title: "Konteks & Preferensi",
-      desc: "Simpan profil teknologi dan batasan implementasi ke dalam memori vektor terindeks.",
+      title: "Simpan preferensi",
+      desc: "Catat stack teknologi dan preferensi kerja untuk nanti.",
       icon: <Zap size={15} className="suggestion-icon" />,
       prompt:
-        "Saya adalah software engineer yang fokus pada TypeScript dan Clean Architecture. Ingat ini untuk referensi berikutnya.",
+        "Saya bekerja dengan TypeScript dan Clean Architecture. Simpan ini sebagai preferensi untuk percakapan berikutnya.",
     },
     {
-      title: "Evaluasi pgvector vs Pinecone",
-      desc: "Analisis teknis efisiensi index HNSW PostgreSQL dibanding solusi managed vector database.",
+      title: "Bandingkan vector store",
+      desc: "Pilih antara pgvector dan Pinecone untuk fitur memori.",
       icon: <ShieldCheck size={15} className="suggestion-icon" />,
       prompt:
-        "Analisis komparatif yang objektif antara pgvector (Supabase/PostgreSQL) vs Pinecone untuk AI application memory.",
+        "Bandingkan pgvector dan Pinecone untuk memori aplikasi AI dari sisi biaya, operasional, dan skala.",
     },
   ];
 
@@ -277,14 +278,14 @@ function EmptyStateScreen({
     <div className="empty-state">
       <div className="empty-hero">
         <div className="empty-mark" aria-hidden="true">
-          <Sparkles size={16} />
+          <MessageSquare size={16} />
         </div>
 
         <h1 className="empty-heading">
-          Apa yang ingin Anda selesaikan hari ini?
+          Apa yang sedang kamu kerjakan?
         </h1>
         <p className="empty-description">
-          Ruang kerja penalaran terstruktur dengan streaming respons real-time dan sistem memori jangka panjang terindeks.
+          Tanyakan soal kode, simpan preferensi, atau bandingkan pilihan teknis.
         </p>
       </div>
 

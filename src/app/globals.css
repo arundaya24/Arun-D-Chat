@@ -64,6 +64,11 @@ body.light,
   overflow: hidden;
   opacity: 0.3;
   mix-blend-mode: normal;
+  transition: opacity 220ms var(--ease-ui);
+}
+
+.artisanal-canvas-container.is-light {
+  opacity: 0.36;
 }
 
 .artisanal-canvas-container canvas {
@@ -247,13 +252,11 @@ input:focus-visible {
 }
 
 .sidebar-new-chat {
-  position: relative;
   display: flex;
   min-height: 42px;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  overflow: hidden;
   padding: 0 12px;
   border-color: rgb(16 163 127 / 34%);
   border-radius: 10px;
@@ -265,24 +268,6 @@ input:focus-visible {
 
 .sidebar-new-chat:hover {
   background: var(--color-accent-hover);
-}
-
-.sidebar-new-chat::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    108deg,
-    transparent 18%,
-    rgb(255 255 255 / 17%) 48%,
-    transparent 78%
-  );
-  content: "";
-  pointer-events: none;
-  transform: translateX(-140%) skewX(-16deg);
-}
-
-.sidebar-new-chat:hover::after {
-  animation: button-shimmer 760ms var(--ease-ui) both;
 }
 
 .sidebar-new-chat-label,
@@ -689,6 +674,7 @@ input:focus-visible {
   color: var(--color-ink);
   font-size: 14px;
   line-height: 1.75;
+  font-style: normal;
   overflow-wrap: break-word;
 }
 
@@ -1077,7 +1063,17 @@ html.light .copy-code-button:hover {
   color: var(--color-ink);
   font-size: 14px;
   line-height: 1.75;
+  font-style: normal;
   overflow-wrap: break-word;
+}
+
+.markdown-body :where(*) {
+  font-style: normal;
+}
+
+.markdown-body em,
+.markdown-body em :where(*) {
+  font-style: italic;
 }
 
 .markdown-body > :first-child {
@@ -1320,12 +1316,6 @@ html.light .hljs-name {
   background: var(--color-subtle);
 }
 
-@keyframes button-shimmer {
-  to {
-    transform: translateX(140%) skewX(-16deg);
-  }
-}
-
 @keyframes typing-pulse {
   0%,
   100% {
@@ -1537,8 +1527,6 @@ button.active-tactile:active {
 }
 
 .modal-primary-btn {
-  position: relative;
-  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1556,24 +1544,6 @@ button.active-tactile:active {
 
 .modal-primary-btn:hover {
   background: var(--color-accent-hover);
-}
-
-.modal-primary-btn::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    108deg,
-    transparent 18%,
-    rgb(255 255 255 / 17%) 48%,
-    transparent 78%
-  );
-  content: "";
-  pointer-events: none;
-  transform: translateX(-140%) skewX(-16deg);
-}
-
-.modal-primary-btn:hover::after {
-  animation: button-shimmer 760ms var(--ease-ui) both;
 }
 
 .modal-danger-btn {
