@@ -7,120 +7,70 @@ interface ArtisanalCanvasProps {
   theme?: "dark" | "light";
 }
 
-const vertexShaderSource = `
+const waveShaderFunctions = `
   uniform float uTime;
   uniform vec2 uMouse;
-  varying vec2 vUv;
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
-  varying float vElevation;
 
   float getRawElevation(vec2 pos, float time) {
-    float primary = sin(pos.x * 0.85 + time * 0.38 + cos(pos.y * 0.65 + time * 0.22) * 0.72) * 0.52;
-    float secondary = cos(pos.x * 1.45 + pos.y * 0.75 + time * 0.44) * 0.24;
-    float tertiary = sin(pos.x * 2.15 - pos.y * 0.65 + time * 0.48) * 0.10;
+    float primary = sin(pos.x * 0.82 + time * 0.36 + cos(pos.y * 0.62 + time * 0.22) * 0.78) * 0.62;
+    float secondary = cos(pos.x * 1.38 + pos.y * 0.72 + time * 0.42) * 0.28;
+    float tertiary = sin(pos.x * 2.05 - pos.y * 0.68 + time * 0.48) * 0.12;
 
-    float mouseDist = distance(vec2(pos.x * 0.32, pos.y * 0.48), uMouse);
-    float mouseDecay = exp(-mouseDist * mouseDist * 2.4);
-    float mouseWave = cos(mouseDist * 2.4 - time * 0.75) * mouseDecay * 0.18;
+    float mouseDist = distance(vec2(pos.x * 0.30, pos.y * 0.46), uMouse);
+    float mouseDecay = exp(-mouseDist * mouseDist * 2.2);
+    float mouseWave = cos(mouseDist * 2.4 - time * 0.75) * mouseDecay * 0.20;
 
     return primary + secondary + tertiary + mouseWave;
   }
 
   float getEdgeTaper(vec2 pos) {
-    float normX = clamp(pos.x / 6.4 * 0.5 + 0.5, 0.0, 1.0);
-    float normY = clamp(pos.y / 2.8 * 0.5 + 0.5, 0.0, 1.0);
-    float taperX = smoothstep(0.0, 0.14, normX) * smoothstep(1.0, 0.86, normX);
-    float taperY = smoothstep(0.0, 0.15, normY) * smoothstep(1.0, 0.80, normY);
+    float normX = clamp(pos.x / 6.6 * 0.5 + 0.5, 0.0, 1.0);
+    float normY = clamp(pos.y / 3.0 * 0.5 + 0.5, 0.0, 1.0);
+    float taperX = smoothstep(0.0, 0.15, normX) * smoothstep(1.0, 0.85, normX);
+    float taperY = smoothstep(0.0, 0.16, normY) * smoothstep(1.0, 0.82, normY);
     return taperX * taperY;
   }
 
   float getElevation(vec2 pos, float time) {
     return getRawElevation(pos, time) * getEdgeTaper(pos);
   }
+`;
+
+const wireframeVertexShader = `
+  varying vec2 vUv;
+  varying float vElevation;
+  ${waveShaderFunctions}
 
   void main() {
     vUv = uv;
     vec3 transformed = position;
-
     float elevation = getElevation(transformed.xy, uTime);
     transformed.z += elevation;
     vElevation = elevation;
-
-    float delta = 0.06;
-    float elevX1 = getElevation(transformed.xy - vec2(delta, 0.0), uTime);
-    float elevX2 = getElevation(transformed.xy + vec2(delta, 0.0), uTime);
-    float elevY1 = getElevation(transformed.xy - vec2(0.0, delta), uTime);
-    float elevY2 = getElevation(transformed.xy + vec2(0.0, delta), uTime);
-
-    vec3 calculatedNormal = normalize(vec3(elevX1 - elevX2, elevY1 - elevY2, 2.0 * delta));
-    vNormal = normalize(normalMatrix * calculatedNormal);
-
-    vec4 modelViewPosition = modelViewMatrix * vec4(transformed, 1.0);
-    vViewPosition = -modelViewPosition.xyz;
-    gl_Position = projectionMatrix * modelViewPosition;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
   }
 `;
 
-const fragmentShaderSource = `
-  uniform float uTime;
-  uniform float uTheme;
+const wireframeFragmentShader = `
+  uniform vec3 uWireColor;
+  uniform vec3 uWireCrestColor;
+  uniform float uWireOpacity;
   varying vec2 vUv;
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
   varying float vElevation;
 
   void main() {
-    vec3 normal = normalize(vNormal);
-    if (!gl_FrontFacing) {
-      normal = -normal;
-    }
-    vec3 viewDir = normalize(vViewPosition);
-    vec3 lightDir = normalize(vec3(0.55, 0.75, 1.15));
-
-    float NdotV = clamp(dot(viewDir, normal), 0.0, 1.0);
-    float diffuse = max(dot(normal, lightDir), 0.0);
-    float specular = pow(max(dot(reflect(-lightDir, normal), viewDir), 0.0), 22.0);
-    float fresnel = pow(1.0 - NdotV, 2.2) * smoothstep(0.06, 0.32, NdotV);
-
-    vec3 darkShadow = vec3(0.035, 0.045, 0.038);
-    vec3 darkMid = vec3(0.065, 0.095, 0.078);
-    vec3 darkHighlight = vec3(0.12, 0.25, 0.19);
-    vec3 darkAccent = vec3(0.063, 0.639, 0.498);
-
-    vec3 lightShadow = vec3(0.74, 0.82, 0.77);
-    vec3 lightMid = vec3(0.86, 0.92, 0.88);
-    vec3 lightHighlight = vec3(0.97, 1.0, 0.98);
-    vec3 lightAccent = vec3(0.04, 0.55, 0.42);
-
-    vec3 activeShadow = mix(darkShadow, lightShadow, uTheme);
-    vec3 activeMid = mix(darkMid, lightMid, uTheme);
-    vec3 activeHighlight = mix(darkHighlight, lightHighlight, uTheme);
-    vec3 activeAccent = mix(darkAccent, lightAccent, uTheme);
-
-    float elevationFactor = smoothstep(-0.4, 0.4, vElevation);
-    vec3 surfaceColor = mix(activeShadow, activeMid, diffuse * 0.7 + 0.3);
-    surfaceColor = mix(surfaceColor, activeHighlight, elevationFactor * 0.42 + specular * 0.55);
-    surfaceColor = mix(surfaceColor, activeAccent, fresnel * (uTheme > 0.5 ? 0.50 : 0.68));
-
-    float iridescentEffect = sin(vUv.x * 10.0 + uTime * 0.2) * cos(vUv.y * 10.0 + uTime * 0.2) * 0.025;
-    surfaceColor += iridescentEffect * (uTheme > 0.5 ? 0.6 : 0.9);
-
-    float edgeAlphaX = smoothstep(0.0, 0.14, vUv.x) * smoothstep(1.0, 0.86, vUv.x);
-    float edgeAlphaY = smoothstep(0.0, 0.15, vUv.y) * smoothstep(1.0, 0.78, vUv.y);
+    float edgeAlphaX = smoothstep(0.0, 0.16, vUv.x) * smoothstep(1.0, 0.84, vUv.x);
+    float edgeAlphaY = smoothstep(0.0, 0.18, vUv.y) * smoothstep(1.0, 0.80, vUv.y);
     float edgeAlpha = edgeAlphaX * edgeAlphaY;
-
-    float alpha = mix(0.72, 0.62, uTheme) * edgeAlpha;
-    gl_FragColor = vec4(surfaceColor, alpha);
+    float crestMix = smoothstep(-0.25, 0.55, vElevation);
+    vec3 finalColor = mix(uWireColor, uWireCrestColor, crestMix);
+    gl_FragColor = vec4(finalColor, uWireOpacity * edgeAlpha);
   }
 `;
 
 export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const targetThemeRef = useRef<number>(theme === "light" ? 1.0 : 0.0);
-  const currentThemeUniformRef = useRef<THREE.IUniform<number>>({
-    value: theme === "light" ? 1.0 : 0.0,
-  });
 
   useEffect(() => {
     targetThemeRef.current = theme === "light" ? 1.0 : 0.0;
@@ -135,13 +85,13 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      45,
+      44,
       container.clientWidth / container.clientHeight,
       0.1,
       100
     );
-    camera.position.set(0, 0.45, 4.1);
-    camera.lookAt(0, 0.12, 0);
+    camera.position.set(0, 0.48, 3.95);
+    camera.lookAt(0, 0.10, 0);
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -151,32 +101,172 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
     container.appendChild(renderer.domElement);
 
-    const segmentsX = isMobileViewport ? 64 : 120;
-    const segmentsY = isMobileViewport ? 48 : 96;
-    const geometry = new THREE.PlaneGeometry(12.8, 5.6, segmentsX, segmentsY);
+    const darkAmbientColor = new THREE.Color("#0d4436");
+    const lightAmbientColor = new THREE.Color("#a7f3d0");
+    const ambientLight = new THREE.AmbientLight(darkAmbientColor, 0.9);
+    scene.add(ambientLight);
 
-    const uniforms = {
-      uTime: { value: 0 },
-      uMouse: { value: new THREE.Vector2(0, 0) },
-      uTheme: currentThemeUniformRef.current,
-    };
+    const darkHemiSky = new THREE.Color("#6ee7b7");
+    const lightHemiSky = new THREE.Color("#ecfdf5");
+    const darkHemiGround = new THREE.Color("#052e16");
+    const lightHemiGround = new THREE.Color("#064e3b");
+    const hemiLight = new THREE.HemisphereLight(darkHemiSky, darkHemiGround, 0.95);
+    scene.add(hemiLight);
 
-    const material = new THREE.ShaderMaterial({
-      vertexShader: vertexShaderSource,
-      fragmentShader: fragmentShaderSource,
-      uniforms,
+    const darkKeyColor = new THREE.Color("#d1fae5");
+    const lightKeyColor = new THREE.Color("#ffffff");
+    const keyLight = new THREE.DirectionalLight(darkKeyColor, 2.75);
+    keyLight.position.set(4.5, 6.2, 4.0);
+    scene.add(keyLight);
+
+    const darkRimColor = new THREE.Color("#10b981");
+    const lightRimColor = new THREE.Color("#34d399");
+    const rimLight = new THREE.DirectionalLight(darkRimColor, 3.1);
+    rimLight.position.set(-5.2, 3.4, -3.6);
+    scene.add(rimLight);
+
+    const darkPointColor = new THREE.Color("#34d399");
+    const lightPointColor = new THREE.Color("#10b981");
+    const pointLight = new THREE.PointLight(darkPointColor, 6.8, 15, 1.5);
+    pointLight.position.set(0.4, 1.9, 2.1);
+    scene.add(pointLight);
+
+    const segmentsX = isMobileViewport ? 72 : 128;
+    const segmentsY = isMobileViewport ? 52 : 96;
+    const surfaceGeometry = new THREE.PlaneGeometry(13.2, 6.0, segmentsX, segmentsY);
+
+    const wireSegmentsX = isMobileViewport ? 36 : 56;
+    const wireSegmentsY = isMobileViewport ? 24 : 40;
+    const wireGeometry = new THREE.PlaneGeometry(13.2, 6.0, wireSegmentsX, wireSegmentsY);
+
+    const sharedTimeUniform = { value: 0 };
+    const sharedMouseUniform = { value: new THREE.Vector2(0, 0) };
+    const fresnelColorUniform = { value: new THREE.Color("#34d399") };
+    const fresnelStrengthUniform = { value: 0.85 };
+    const themeUniform = { value: targetThemeRef.current };
+
+    const darkSurfaceColor = new THREE.Color("#0c4636");
+    const lightSurfaceColor = new THREE.Color("#065f46");
+    const darkEmissiveColor = new THREE.Color("#064e3b");
+    const lightEmissiveColor = new THREE.Color("#043b2c");
+    const darkFresnelColor = new THREE.Color("#34d399");
+    const lightFresnelColor = new THREE.Color("#10b981");
+
+    const surfaceMaterial = new THREE.MeshPhysicalMaterial({
+      color: darkSurfaceColor.clone(),
+      emissive: darkEmissiveColor.clone(),
+      emissiveIntensity: 0.42,
+      metalness: 0.44,
+      roughness: 0.28,
+      clearcoat: 0.48,
+      clearcoatRoughness: 0.22,
       transparent: true,
+      opacity: 0.92,
       depthWrite: false,
       side: THREE.DoubleSide,
-      wireframe: false,
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, -0.22, 0);
-    mesh.rotation.x = -0.85;
-    scene.add(mesh);
+    surfaceMaterial.customProgramCacheKey = () => "artisanal-wave-physical-v1";
+    surfaceMaterial.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = sharedTimeUniform;
+      shader.uniforms.uMouse = sharedMouseUniform;
+      shader.uniforms.uFresnelColor = fresnelColorUniform;
+      shader.uniforms.uFresnelStrength = fresnelStrengthUniform;
+      shader.uniforms.uTheme = themeUniform;
+
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+          varying vec2 vWaveUv;
+          varying float vElevation;
+          ${waveShaderFunctions}`
+        )
+        .replace(
+          "#include <beginnormal_vertex>",
+          `#include <beginnormal_vertex>
+          float wDelta = 0.06;
+          float wElevX1 = getElevation(position.xy - vec2(wDelta, 0.0), uTime);
+          float wElevX2 = getElevation(position.xy + vec2(wDelta, 0.0), uTime);
+          float wElevY1 = getElevation(position.xy - vec2(0.0, wDelta), uTime);
+          float wElevY2 = getElevation(position.xy + vec2(0.0, wDelta), uTime);
+          objectNormal = normalize(vec3(wElevX1 - wElevX2, wElevY1 - wElevY2, 2.0 * wDelta));`
+        )
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+          float wElev = getElevation(transformed.xy, uTime);
+          transformed.z += wElev;
+          vElevation = wElev;
+          vWaveUv = uv;`
+        );
+
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+          uniform vec3 uFresnelColor;
+          uniform float uFresnelStrength;
+          uniform float uTheme;
+          varying vec2 vWaveUv;
+          varying float vElevation;`
+        )
+        .replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>
+          float elevNorm = clamp((vElevation + 0.55) / 1.1, 0.0, 1.0);
+          diffuseColor.rgb *= mix(0.68, 1.28, elevNorm);
+          float edgeAlphaX = smoothstep(0.0, 0.14, vWaveUv.x) * smoothstep(1.0, 0.86, vWaveUv.x);
+          float edgeAlphaY = smoothstep(0.0, 0.15, vWaveUv.y) * smoothstep(1.0, 0.80, vWaveUv.y);
+          diffuseColor.a *= edgeAlphaX * edgeAlphaY;`
+        )
+        .replace(
+          "#include <opaque_fragment>",
+          `float waveNdotV = clamp(dot(geometryViewDir, geometryNormal), 0.0, 1.0);
+          float waveFresnel = pow(1.0 - waveNdotV, 2.2) * smoothstep(0.05, 0.34, waveNdotV);
+          float ridgeCrest = smoothstep(0.14, 0.65, vElevation);
+          outgoingLight += uFresnelColor * (waveFresnel * uFresnelStrength + ridgeCrest * uFresnelStrength * 0.20);
+          #include <opaque_fragment>`
+        );
+    };
+
+    const darkWireColor = new THREE.Color("#10b981");
+    const lightWireColor = new THREE.Color("#064e3b");
+    const darkWireCrestColor = new THREE.Color("#6ee7b7");
+    const lightWireCrestColor = new THREE.Color("#a7f3d0");
+
+    const wireUniforms = {
+      uTime: sharedTimeUniform,
+      uMouse: sharedMouseUniform,
+      uWireColor: { value: darkWireColor.clone() },
+      uWireCrestColor: { value: darkWireCrestColor.clone() },
+      uWireOpacity: { value: 0.16 },
+    };
+
+    const wireMaterial = new THREE.ShaderMaterial({
+      vertexShader: wireframeVertexShader,
+      fragmentShader: wireframeFragmentShader,
+      uniforms: wireUniforms,
+      transparent: true,
+      depthWrite: false,
+      wireframe: true,
+    });
+
+    const waveGroup = new THREE.Group();
+    waveGroup.position.set(0, -0.18, 0);
+    waveGroup.rotation.x = -0.82;
+
+    const surfaceMesh = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+    const wireMesh = new THREE.Mesh(wireGeometry, wireMaterial);
+    wireMesh.position.z = 0.006;
+
+    waveGroup.add(surfaceMesh);
+    waveGroup.add(wireMesh);
+    scene.add(waveGroup);
 
     const mouseCurrent = new THREE.Vector2(0, 0);
     const mouseTarget = new THREE.Vector2(0, 0);
@@ -190,24 +280,66 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     let animationFrameIdentifier = 0;
+    let themeFactor = targetThemeRef.current;
     const clock = new THREE.Clock();
+
+    const applyThemeBlend = (t: number) => {
+      surfaceMaterial.color.lerpColors(darkSurfaceColor, lightSurfaceColor, t);
+      surfaceMaterial.emissive.lerpColors(darkEmissiveColor, lightEmissiveColor, t);
+      surfaceMaterial.emissiveIntensity = THREE.MathUtils.lerp(0.42, 0.24, t);
+      surfaceMaterial.metalness = THREE.MathUtils.lerp(0.44, 0.28, t);
+      surfaceMaterial.roughness = THREE.MathUtils.lerp(0.28, 0.36, t);
+      surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.48, 0.36, t);
+      surfaceMaterial.opacity = THREE.MathUtils.lerp(0.92, 0.88, t);
+
+      fresnelColorUniform.value.lerpColors(darkFresnelColor, lightFresnelColor, t);
+      fresnelStrengthUniform.value = THREE.MathUtils.lerp(0.85, 0.45, t);
+      themeUniform.value = t;
+
+      ambientLight.color.lerpColors(darkAmbientColor, lightAmbientColor, t);
+      ambientLight.intensity = THREE.MathUtils.lerp(0.9, 1.0, t);
+
+      hemiLight.color.lerpColors(darkHemiSky, lightHemiSky, t);
+      hemiLight.groundColor.lerpColors(darkHemiGround, lightHemiGround, t);
+      hemiLight.intensity = THREE.MathUtils.lerp(0.95, 1.15, t);
+
+      keyLight.color.lerpColors(darkKeyColor, lightKeyColor, t);
+      keyLight.intensity = THREE.MathUtils.lerp(2.75, 2.55, t);
+
+      rimLight.color.lerpColors(darkRimColor, lightRimColor, t);
+      rimLight.intensity = THREE.MathUtils.lerp(3.1, 2.25, t);
+
+      pointLight.color.lerpColors(darkPointColor, lightPointColor, t);
+      pointLight.intensity = THREE.MathUtils.lerp(6.8, 5.2, t);
+
+      wireUniforms.uWireColor.value.lerpColors(darkWireColor, lightWireColor, t);
+      wireUniforms.uWireCrestColor.value.lerpColors(darkWireCrestColor, lightWireCrestColor, t);
+      wireUniforms.uWireOpacity.value = THREE.MathUtils.lerp(0.16, 0.18, t);
+    };
+
+    applyThemeBlend(themeFactor);
 
     const renderLoop = () => {
       const elapsedTime = clock.getElapsedTime();
 
       if (!isReducedMotion) {
-        uniforms.uTime.value = elapsedTime;
+        sharedTimeUniform.value = elapsedTime;
       }
 
-      currentThemeUniformRef.current.value +=
-        (targetThemeRef.current - currentThemeUniformRef.current.value) * 0.05;
+      themeFactor += (targetThemeRef.current - themeFactor) * 0.06;
+      applyThemeBlend(themeFactor);
 
       mouseCurrent.x += (mouseTarget.x - mouseCurrent.x) * 0.045;
       mouseCurrent.y += (mouseTarget.y - mouseCurrent.y) * 0.045;
-      uniforms.uMouse.value.copy(mouseCurrent);
+      sharedMouseUniform.value.copy(mouseCurrent);
 
-      mesh.rotation.z = mouseCurrent.x * 0.04;
-      mesh.rotation.x = -0.85 + mouseCurrent.y * 0.04;
+      waveGroup.rotation.z = mouseCurrent.x * 0.04;
+      waveGroup.rotation.x = -0.82 + mouseCurrent.y * 0.04;
+
+      if (!isReducedMotion) {
+        pointLight.position.x = Math.sin(elapsedTime * 0.35) * 2.2 + mouseCurrent.x * 1.4;
+        pointLight.position.y = 1.85 + Math.cos(elapsedTime * 0.28) * 0.35 + mouseCurrent.y * 0.6;
+      }
 
       renderer.render(scene, camera);
       animationFrameIdentifier = requestAnimationFrame(renderLoop);
@@ -237,8 +369,10 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
         container.removeChild(renderer.domElement);
       }
 
-      geometry.dispose();
-      material.dispose();
+      surfaceGeometry.dispose();
+      wireGeometry.dispose();
+      surfaceMaterial.dispose();
+      wireMaterial.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
     };

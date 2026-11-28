@@ -62,12 +62,15 @@ body.light,
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  opacity: 1;
+  mix-blend-mode: normal;
 }
 
 .artisanal-canvas-container canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
+  mix-blend-mode: normal;
 }
 
 .theme-toggle-button {
@@ -78,7 +81,9 @@ body.light,
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--color-muted);
   font-size: 12px;
   font-weight: 520;
@@ -149,7 +154,9 @@ input:focus-visible {
   flex: 0 0 272px;
   flex-direction: column;
   border-right: 1px solid var(--color-border);
-  background: var(--color-sidebar);
+  background: color-mix(in srgb, var(--color-sidebar) 76%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: transform var(--duration-ui) var(--ease-ui);
 }
 
@@ -321,7 +328,7 @@ input:focus-visible {
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
   color: var(--color-subtle);
   transition: border-color var(--duration-ui) var(--ease-ui);
 }
@@ -452,7 +459,7 @@ input:focus-visible {
   padding: 0 10px;
   border-color: var(--color-border);
   border-radius: 9px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
   color: var(--color-muted);
   font-size: 12px;
 }
@@ -492,7 +499,7 @@ input:focus-visible {
   gap: 16px;
   padding: 0 26px;
   border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-canvas) 85%, transparent);
+  background: color-mix(in srgb, var(--color-canvas) 74%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -528,7 +535,9 @@ input:focus-visible {
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--color-muted);
   cursor: pointer;
   font-size: 12px;
@@ -618,8 +627,8 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 24px 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: 20px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
 }
 
 .message-row.is-assistant {
@@ -685,13 +694,24 @@ input:focus-visible {
   overflow-wrap: break-word;
 }
 
+.message-row.is-assistant .message-content {
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 4px 16px 16px 16px;
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .message-content.is-user {
   width: fit-content;
   max-width: 100%;
   padding: 10px 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: 16px 4px 16px 16px;
-  background: var(--color-surface-raised);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   white-space: pre-wrap;
 }
 
@@ -775,12 +795,23 @@ input:focus-visible {
   text-align: left;
 }
 
+.empty-hero {
+  width: min(100%, 720px);
+  margin-bottom: 20px;
+  padding: 22px 24px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-canvas) 62%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .empty-mark {
   display: grid;
   width: 38px;
   height: 38px;
   place-items: center;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
   border: 1px solid rgb(16 163 127 / 30%);
   border-radius: 12px;
   background: var(--color-accent-soft);
@@ -800,7 +831,7 @@ input:focus-visible {
 
 .empty-description {
   max-width: 530px;
-  margin: 12px 0 28px;
+  margin: 12px 0 0;
   color: var(--color-muted);
   font-size: 14px;
   line-height: 1.6;
@@ -824,7 +855,9 @@ input:focus-visible {
   padding: 15px 16px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-ink);
   text-align: left;
   transition:
@@ -1157,7 +1190,7 @@ input:focus-visible {
   margin: 17px 0;
   border: 1px solid var(--color-border);
   border-radius: 9px;
-  background: var(--color-code-bg);
+  background: color-mix(in srgb, var(--color-code-bg) 88%, transparent);
 }
 
 .code-block-header {
@@ -1168,7 +1201,7 @@ input:focus-visible {
   gap: 12px;
   padding: 0 10px 0 13px;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
 }
 
 .code-language {
@@ -1758,6 +1791,7 @@ button.active-tactile:active {
     position: fixed;
     inset: 0 auto 0 0;
     width: min(84vw, 300px);
+    background: color-mix(in srgb, var(--color-sidebar) 88%, transparent);
     transform: translateX(-102%);
   }
 

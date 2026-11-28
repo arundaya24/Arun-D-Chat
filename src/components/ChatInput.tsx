@@ -46,7 +46,7 @@ export function ChatInput({
     <div className="w-full max-w-3xl mx-auto px-4 pb-4 md:pb-6">
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-col w-full rounded-2xl md:rounded-3xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1e1e20] shadow-sm transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-within:border-black/25 dark:focus-within:border-white/25 focus-within:shadow-md"
+        className="relative flex flex-col w-full rounded-2xl md:rounded-3xl border border-black/10 dark:border-white/10 bg-white/75 dark:bg-[#1e1e20]/75 backdrop-blur-md shadow-sm transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] focus-within:border-black/25 dark:focus-within:border-white/25 focus-within:shadow-md"
       >
         <textarea
           ref={textareaRef}
@@ -94,7 +94,7 @@ export function ChatInput({
         </div>
       </form>
 
-      <p className="mt-2.5 text-center text-xs font-sans text-neutral-400 dark:text-neutral-500 select-none tracking-tight">
+      <p className="mt-2.5 text-center text-xs font-sans text-neutral-600 dark:text-neutral-400 select-none tracking-tight">
         Arun-D&apos;Chat dapat melakukan kesalahan. Harap verifikasi data penting secara independen.
       </p>
     </div>

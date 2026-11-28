@@ -275,16 +275,18 @@ function EmptyStateScreen({
 
   return (
     <div className="empty-state">
-      <div className="empty-mark" aria-hidden="true">
-        <Sparkles size={16} />
-      </div>
+      <div className="empty-hero">
+        <div className="empty-mark" aria-hidden="true">
+          <Sparkles size={16} />
+        </div>
 
-      <h1 className="empty-heading">
-        Apa yang ingin Anda selesaikan hari ini?
-      </h1>
-      <p className="empty-description">
-        Ruang kerja penalaran terstruktur dengan streaming respons real-time dan sistem memori jangka panjang terindeks.
-      </p>
+        <h1 className="empty-heading">
+          Apa yang ingin Anda selesaikan hari ini?
+        </h1>
+        <p className="empty-description">
+          Ruang kerja penalaran terstruktur dengan streaming respons real-time dan sistem memori jangka panjang terindeks.
+        </p>
+      </div>
 
       <div className="suggestion-grid">
         {presets.map((item, idx) => (
