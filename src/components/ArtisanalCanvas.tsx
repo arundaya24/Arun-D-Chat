@@ -290,7 +290,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       surfaceMaterial.metalness = THREE.MathUtils.lerp(0.44, 0.28, t);
       surfaceMaterial.roughness = THREE.MathUtils.lerp(0.28, 0.36, t);
       surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.48, 0.36, t);
-      surfaceMaterial.opacity = THREE.MathUtils.lerp(0.92, 0.88, t);
+      surfaceMaterial.opacity = THREE.MathUtils.lerp(0.92, 0.95, t);
 
       fresnelColorUniform.value.lerpColors(darkFresnelColor, lightFresnelColor, t);
       fresnelStrengthUniform.value = THREE.MathUtils.lerp(0.85, 0.45, t);
