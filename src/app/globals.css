@@ -2069,12 +2069,8 @@ html.light .suggestion-card:not(:hover) {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .workspace-body.is-empty {
-    gap: 12px;
-  }
-
   .workspace-body.is-empty .chat-scroll {
-    padding: 0 16px;
+    padding: 0 16px 220px;
   }
 
   .mobile-menu {
@@ -2119,7 +2115,7 @@ html.light .suggestion-card:not(:hover) {
 }
 
 .chat-scroll {
-  padding: 18px 16px 14px;
+  padding: 18px 16px 220px;
   }
 
   .empty-state {
