@@ -18,6 +18,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ChatAreaProps {
   messages: Message[];
+  displayName: string;
   isLoading: boolean;
   isMessagesLoading?: boolean;
   activeChatId?: string | null;
@@ -29,6 +30,7 @@ interface ChatAreaProps {
 
 export function ChatArea({
   messages,
+  displayName,
   isLoading,
   isMessagesLoading,
   activeChatId,
@@ -158,7 +160,7 @@ export function ChatArea({
 
                 <div className="message-main">
                   <div className="message-author">
-                    <span>{isUser ? "Anda" : "Arun-D'Chat"}</span>
+                    <span>{isUser ? displayName : "Arun-D'Chat"}</span>
                   </div>
 
                   <div className={`message-content${isUser ? " is-user" : ""}`}>

@@ -26,8 +26,8 @@ const waveShaderFunctions = `
   float getEdgeTaper(vec2 pos) {
     float normX = clamp(pos.x / 6.6 * 0.5 + 0.5, 0.0, 1.0);
     float normY = clamp(pos.y / 3.0 * 0.5 + 0.5, 0.0, 1.0);
-    float taperX = smoothstep(0.0, 0.15, normX) * smoothstep(1.0, 0.85, normX);
-    float taperY = smoothstep(0.0, 0.16, normY) * smoothstep(1.0, 0.82, normY);
+    float taperX = smoothstep(0.0, 0.15, normX) * (1.0 - smoothstep(0.85, 1.0, normX));
+    float taperY = smoothstep(0.0, 0.16, normY) * (1.0 - smoothstep(0.82, 1.0, normY));
     return taperX * taperY;
   }
 
@@ -59,8 +59,8 @@ const wireframeFragmentShader = `
   varying float vElevation;
 
   void main() {
-    float edgeAlphaX = smoothstep(0.0, 0.16, vUv.x) * smoothstep(1.0, 0.84, vUv.x);
-    float edgeAlphaY = smoothstep(0.0, 0.18, vUv.y) * smoothstep(1.0, 0.80, vUv.y);
+    float edgeAlphaX = smoothstep(0.0, 0.16, vUv.x) * (1.0 - smoothstep(0.84, 1.0, vUv.x));
+    float edgeAlphaY = smoothstep(0.0, 0.18, vUv.y) * (1.0 - smoothstep(0.80, 1.0, vUv.y));
     float edgeAlpha = edgeAlphaX * edgeAlphaY;
     float crestMix = smoothstep(-0.25, 0.55, vElevation);
     vec3 finalColor = mix(uWireColor, uWireCrestColor, crestMix);
@@ -120,19 +120,19 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
     const darkKeyColor = new THREE.Color("#d1fae5");
     const lightKeyColor = new THREE.Color("#ffffff");
     const keyLight = new THREE.DirectionalLight(darkKeyColor, 2.75);
-    keyLight.position.set(4.5, 6.2, 4.0);
+    keyLight.position.set(0, 6.2, 4.0);
     scene.add(keyLight);
 
     const darkRimColor = new THREE.Color("#10b981");
     const lightRimColor = new THREE.Color("#059669");
     const rimLight = new THREE.DirectionalLight(darkRimColor, 3.1);
-    rimLight.position.set(-5.2, 3.4, -3.6);
+    rimLight.position.set(0, 3.4, -3.6);
     scene.add(rimLight);
 
     const darkPointColor = new THREE.Color("#34d399");
     const lightPointColor = new THREE.Color("#047857");
     const pointLight = new THREE.PointLight(darkPointColor, 6.8, 15, 1.5);
-    pointLight.position.set(0.4, 1.9, 2.1);
+    pointLight.position.set(0, 1.9, 2.1);
     scene.add(pointLight);
 
     const segmentsX = isMobileViewport ? 72 : 128;
@@ -160,10 +160,10 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       color: darkSurfaceColor.clone(),
       emissive: darkEmissiveColor.clone(),
       emissiveIntensity: 0.42,
-      metalness: 0.44,
-      roughness: 0.28,
-      clearcoat: 0.48,
-      clearcoatRoughness: 0.22,
+      metalness: 0.32,
+      roughness: 0.34,
+      clearcoat: 0.36,
+      clearcoatRoughness: 0.3,
       transparent: true,
       opacity: 0.92,
       depthWrite: false,
@@ -220,8 +220,8 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
           `#include <color_fragment>
           float elevNorm = clamp((vElevation + 0.55) / 1.1, 0.0, 1.0);
           diffuseColor.rgb *= mix(0.68, 1.28, elevNorm);
-          float edgeAlphaX = smoothstep(0.0, 0.14, vWaveUv.x) * smoothstep(1.0, 0.86, vWaveUv.x);
-          float edgeAlphaY = smoothstep(0.0, 0.15, vWaveUv.y) * smoothstep(1.0, 0.80, vWaveUv.y);
+          float edgeAlphaX = smoothstep(0.0, 0.14, vWaveUv.x) * (1.0 - smoothstep(0.86, 1.0, vWaveUv.x));
+          float edgeAlphaY = smoothstep(0.0, 0.15, vWaveUv.y) * (1.0 - smoothstep(0.80, 1.0, vWaveUv.y));
           diffuseColor.a *= edgeAlphaX * edgeAlphaY;`
         )
         .replace(
@@ -288,9 +288,9 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       surfaceMaterial.color.lerpColors(darkSurfaceColor, lightSurfaceColor, t);
       surfaceMaterial.emissive.lerpColors(darkEmissiveColor, lightEmissiveColor, t);
       surfaceMaterial.emissiveIntensity = THREE.MathUtils.lerp(0.42, 0.18, t);
-      surfaceMaterial.metalness = THREE.MathUtils.lerp(0.44, 0.2, t);
-      surfaceMaterial.roughness = THREE.MathUtils.lerp(0.28, 0.42, t);
-      surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.48, 0.28, t);
+      surfaceMaterial.metalness = THREE.MathUtils.lerp(0.32, 0.2, t);
+      surfaceMaterial.roughness = THREE.MathUtils.lerp(0.34, 0.46, t);
+      surfaceMaterial.clearcoat = THREE.MathUtils.lerp(0.36, 0.28, t);
       surfaceMaterial.opacity = THREE.MathUtils.lerp(0.92, 0.95, t);
 
       fresnelColorUniform.value.lerpColors(darkFresnelColor, lightFresnelColor, t);
@@ -311,7 +311,7 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       rimLight.intensity = THREE.MathUtils.lerp(3.1, 1.75, t);
 
       pointLight.color.lerpColors(darkPointColor, lightPointColor, t);
-      pointLight.intensity = THREE.MathUtils.lerp(6.8, 3.8, t);
+      pointLight.intensity = THREE.MathUtils.lerp(4.5, 3.0, t);
 
       wireUniforms.uWireColor.value.lerpColors(darkWireColor, lightWireColor, t);
       wireUniforms.uWireCrestColor.value.lerpColors(darkWireCrestColor, lightWireCrestColor, t);
@@ -338,7 +338,6 @@ export function ArtisanalCanvas({ theme = "dark" }: ArtisanalCanvasProps) {
       waveGroup.rotation.x = -0.82 + mouseCurrent.y * 0.04;
 
       if (!isReducedMotion) {
-        pointLight.position.x = Math.sin(elapsedTime * 0.35) * 2.2 + mouseCurrent.x * 1.4;
         pointLight.position.y = 1.55 + Math.cos(elapsedTime * 0.28) * 0.3 + mouseCurrent.y * 0.5;
       }
 

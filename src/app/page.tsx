@@ -8,11 +8,12 @@ import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { ChatInput } from "@/components/ChatInput";
 import { MemoryManagerModal } from "@/components/MemoryManagerModal";
+import { DisplayNameModal } from "@/components/DisplayNameModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
 import { generateFastTitle } from "@/lib/utils";
-import { Brain, Menu } from "lucide-react";
+import { Brain, Menu, UserRound } from "lucide-react";
 
 const ArtisanalCanvas = dynamic(
   () => import("@/components/ArtisanalCanvas").then((mod) => mod.ArtisanalCanvas),
@@ -21,11 +22,13 @@ const ArtisanalCanvas = dynamic(
 
 export default function ChatPage() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [displayName, setDisplayName] = useState("Anda");
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
+  const [isDisplayNameModalOpen, setIsDisplayNameModalOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -50,6 +53,8 @@ export default function ChatPage() {
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("arun_theme") as "dark" | "light" | null;
+    const storedDisplayName = localStorage.getItem("arun_display_name")?.trim();
+    if (storedDisplayName) setDisplayName(storedDisplayName);
     const initialTheme =
       storedTheme ||
       (window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -67,6 +72,22 @@ export default function ChatPage() {
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(nextTheme);
   };
+
+  const handleCloseDisplayNameModal = useCallback(() => {
+    setIsDisplayNameModalOpen(false);
+  }, []);
+
+  const handleSaveDisplayName = useCallback((name: string) => {
+    try {
+      localStorage.setItem("arun_display_name", name);
+    } catch (err) {
+      console.error("Gagal menyimpan nama tampilan:", err);
+      return false;
+    }
+
+    setDisplayName(name);
+    return true;
+  }, []);
 
   const loadChats = useCallback(async () => {
     try {
@@ -435,6 +456,16 @@ export default function ChatPage() {
             <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
             <button
               type="button"
+              onClick={() => setIsDisplayNameModalOpen(true)}
+              className="header-memory header-profile active:scale-95"
+              aria-label="Ubah nama tampilan"
+              title="Ubah nama tampilan"
+            >
+              <UserRound size={15} aria-hidden="true" />
+              <span className="header-profile-label">Nama</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsMemoryModalOpen(true)}
               className="header-memory active:scale-95"
             >
@@ -456,6 +487,7 @@ export default function ChatPage() {
         <div className={`workspace-body${isEmptyChat ? " is-empty" : ""}`}>
           <ChatArea
             messages={messages}
+            displayName={displayName}
             isLoading={isLoading}
             isMessagesLoading={isMessagesLoading}
             activeChatId={activeChatId}
@@ -485,6 +517,12 @@ export default function ChatPage() {
         }}
         userId="user_default_01"
         onMemoriesReset={loadMemoryCount}
+      />
+      <DisplayNameModal
+        isOpen={isDisplayNameModalOpen}
+        currentName={displayName}
+        onClose={handleCloseDisplayNameModal}
+        onSave={handleSaveDisplayName}
       />
     </div>
   );
