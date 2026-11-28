@@ -840,7 +840,7 @@ html.light .copy-code-button:hover {
 
 .empty-hero {
   width: min(100%, 720px);
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
   padding: 22px 24px;
   border: 1px solid color-mix(in srgb, var(--color-border) 68%, transparent);
   border-radius: 16px;
@@ -883,6 +883,7 @@ html.light .copy-code-button:hover {
 .suggestion-grid {
   display: grid;
   width: min(100%, 720px);
+  margin: 0 auto;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: 1fr;
   gap: 12px;
