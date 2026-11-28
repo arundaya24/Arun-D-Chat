@@ -250,7 +250,6 @@ input:focus-visible {
 .history-select,
 .history-delete,
 .mobile-menu,
-.mobile-memory,
 .suggestion-card,
 .file-button,
 .send-button,
@@ -557,7 +556,11 @@ input:focus-visible {
   gap: 8px;
 }
 
-.header-memory {
+.settings-control {
+  position: relative;
+}
+
+.settings-trigger {
   display: inline-flex;
   min-height: 34px;
   align-items: center;
@@ -565,9 +568,7 @@ input:focus-visible {
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--color-surface);
   color: var(--color-muted);
   cursor: pointer;
   font-size: 12px;
@@ -577,14 +578,100 @@ input:focus-visible {
     color var(--duration-ui) var(--ease-ui);
 }
 
-.header-memory:hover {
+.settings-trigger:hover,
+.settings-trigger[aria-expanded="true"] {
   border-color: var(--color-border-strong);
   background: var(--color-surface-hover);
   color: var(--color-ink);
 }
 
-.mobile-menu,
-.mobile-memory {
+.settings-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 45;
+  display: flex;
+  width: min(280px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--color-modal-shadow);
+}
+
+.settings-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-section-label {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.settings-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color var(--duration-ui) var(--ease-ui),
+    border-color var(--duration-ui) var(--ease-ui),
+    color var(--duration-ui) var(--ease-ui);
+}
+
+.settings-item:hover,
+.settings-item:focus-visible {
+  border-color: var(--color-border);
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+
+.settings-item-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--color-ink);
+  font-size: 12px;
+}
+
+.settings-item-copy small {
+  overflow: hidden;
+  color: var(--color-subtle);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-count {
+  min-width: 24px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--color-surface-raised);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: center;
+}
+
+.mobile-menu {
   display: none;
 }
 
@@ -1906,22 +1993,6 @@ html.light .suggestion-card:not(:hover) {
     padding: 0 15px;
   }
 
-  .header-memory {
-    display: none;
-  }
-
-  .header-memory.header-profile {
-    display: grid;
-    width: 34px;
-    min-height: 34px;
-    padding: 0;
-    place-items: center;
-  }
-
-  .header-profile-label {
-    display: none;
-  }
-
   .sidebar-close {
     display: grid;
   }
@@ -1938,8 +2009,7 @@ html.light .suggestion-card:not(:hover) {
     padding: 0 16px;
   }
 
-  .mobile-menu,
-  .mobile-memory {
+  .mobile-menu {
     display: grid;
     width: 34px;
     height: 34px;
@@ -1950,8 +2020,7 @@ html.light .suggestion-card:not(:hover) {
     color: var(--color-muted);
   }
 
-  .mobile-menu:hover,
-  .mobile-memory:hover {
+  .mobile-menu:hover {
     border-color: var(--color-border-strong);
     color: var(--color-ink);
   }

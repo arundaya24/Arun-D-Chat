@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChatSession } from "@/types";
 import { getClientSystemContext } from "@/lib/client-context";
 import { generateFastTitle } from "@/lib/utils";
-import { Brain, Menu, UserRound } from "lucide-react";
+import { Brain, ChevronRight, Menu, Settings, UserRound } from "lucide-react";
 
 const ArtisanalCanvas = dynamic(
   () => import("@/components/ArtisanalCanvas").then((mod) => mod.ArtisanalCanvas),
@@ -29,10 +29,13 @@ export default function ChatPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
   const [isDisplayNameModalOpen, setIsDisplayNameModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [memoryCount, setMemoryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isSubmittingRef = useRef(false);
+  const settingsControlRef = useRef<HTMLDivElement>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const activeChatIdRef = useRef<string | null>(null);
   const loadingChatIdRef = useRef<string | null>(null);
   const selectChatAbortControllerRef = useRef<AbortController | null>(null);
@@ -50,6 +53,32 @@ export default function ChatPage() {
   useEffect(() => {
     activeChatIdRef.current = activeChatId;
   }, [activeChatId]);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !settingsControlRef.current?.contains(event.target)
+      ) {
+        setIsSettingsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsSettingsOpen(false);
+        settingsButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSettingsOpen]);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("arun_theme") as "dark" | "light" | null;
@@ -453,34 +482,63 @@ export default function ChatPage() {
             <span className="workspace-title">{activeChatTitle}</span>
           </div>
           <div className="workspace-actions">
-            <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
-            <button
-              type="button"
-              onClick={() => setIsDisplayNameModalOpen(true)}
-              className="header-memory header-profile active:scale-95"
-              aria-label="Ubah nama tampilan"
-              title="Ubah nama tampilan"
-            >
-              <UserRound size={15} aria-hidden="true" />
-              <span className="header-profile-label">Nama</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsMemoryModalOpen(true)}
-              className="header-memory active:scale-95"
-            >
-              <Brain size={15} />
-              <span>Memori</span>
-              <span className="mono-label">{memoryCount}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsMemoryModalOpen(true)}
-              className="mobile-memory active:scale-95"
-              aria-label="Buka memori"
-            >
-              <Brain size={16} />
-            </button>
+            <div className="settings-control" ref={settingsControlRef}>
+              <button
+                ref={settingsButtonRef}
+                type="button"
+                onClick={() => setIsSettingsOpen((open) => !open)}
+                className="settings-trigger active:scale-95"
+                aria-label="Pengaturan"
+                aria-expanded={isSettingsOpen}
+                aria-controls="settings-menu"
+              >
+                <Settings size={15} aria-hidden="true" />
+                <span>Pengaturan</span>
+              </button>
+              {isSettingsOpen && (
+                <div
+                  id="settings-menu"
+                  className="settings-menu"
+                  role="group"
+                  aria-label="Pengaturan"
+                >
+                  <div className="settings-theme-row">
+                    <span className="settings-section-label">Tampilan</span>
+                    <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+                  </div>
+                  <button
+                    type="button"
+                    className="settings-item"
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      setIsDisplayNameModalOpen(true);
+                    }}
+                  >
+                    <UserRound size={15} aria-hidden="true" />
+                    <span className="settings-item-copy">
+                      <span>Nama tampilan</span>
+                      <small>{displayName}</small>
+                    </span>
+                    <ChevronRight size={14} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="settings-item"
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      setIsMemoryModalOpen(true);
+                    }}
+                  >
+                    <Brain size={15} aria-hidden="true" />
+                    <span className="settings-item-copy">
+                      <span>Memori AI</span>
+                      <small>Kelola fakta dan preferensi</small>
+                    </span>
+                    <span className="settings-count">{memoryCount}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
