@@ -24,7 +24,7 @@
   --color-code-text: #d3dbd4;
   --color-modal-backdrop: rgb(8 10 9 / 82%);
   --color-modal-shadow: 0 16px 40px -12px rgb(0 0 0 / 60%);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --ease-ui: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-ui: 180ms;
@@ -127,10 +127,29 @@ body {
   font-family: var(--font-sans);
 }
 
+html,
+body,
+h1,
+h2,
+h3,
+p,
+span,
+div,
+button,
+input,
+textarea {
+  font-style: normal;
+}
+
 button,
 input,
 textarea {
   font: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-style: normal;
 }
 
 button {
@@ -148,7 +167,6 @@ input:focus-visible {
   display: flex;
   width: 100%;
   height: 100dvh;
-  min-height: 560px;
   overflow: clip;
   background: var(--color-canvas);
 }
@@ -475,6 +493,35 @@ input:focus-visible {
   flex: 1;
   flex-direction: column;
   background: transparent;
+}
+
+.workspace-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.workspace-body.is-empty {
+  justify-content: safe center;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.workspace-body.is-empty .chat-scroll {
+  min-height: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+  padding: 0 28px;
+}
+
+.workspace-body.is-empty .empty-state {
+  min-height: 0;
+  padding: 0;
+}
+
+.workspace-body.is-empty .workspace-footer {
+  flex: 0 0 auto;
 }
 
 .workspace-header {
@@ -1072,6 +1119,7 @@ html.light .copy-code-button:hover {
 }
 
 .markdown-body em,
+.markdown-body i,
 .markdown-body em :where(*) {
   font-style: italic;
 }
@@ -1804,6 +1852,14 @@ html.light .suggestion-card:not(:hover) {
 
   .suggestion-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-body.is-empty {
+    gap: 12px;
+  }
+
+  .workspace-body.is-empty .chat-scroll {
+    padding: 0 17px;
   }
 
   .mobile-menu,

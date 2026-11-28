@@ -55,11 +55,11 @@ export function ChatInput({
           onKeyDown={handleKeyDown}
           placeholder="Tulis pesan..."
           rows={1}
-          className="w-full min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-2 text-sm md:text-base font-sans text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 leading-relaxed"
+          className="w-full min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-2 text-sm md:text-base font-sans not-italic text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 leading-relaxed"
         />
 
         <div className="flex items-center justify-between px-4 pb-3 pt-1 select-none">
-          <span className="hidden sm:inline text-[11px] font-sans text-neutral-600 dark:text-neutral-400">
+          <span className="hidden sm:inline text-[11px] font-sans not-italic text-neutral-600 dark:text-neutral-400">
             Shift + Enter untuk baris baru
           </span>
           <span className="sm:hidden" />

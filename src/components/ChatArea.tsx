@@ -281,10 +281,10 @@ function EmptyStateScreen({
           <MessageSquare size={16} />
         </div>
 
-        <h1 className="empty-heading">
+        <h1 className="empty-heading not-italic">
           Apa yang sedang kamu kerjakan?
         </h1>
-        <p className="empty-description">
+        <p className="empty-description not-italic">
           Tanyakan soal kode, simpan preferensi, atau bandingkan pilihan teknis.
         </p>
       </div>
@@ -295,13 +295,13 @@ function EmptyStateScreen({
             key={idx}
             type="button"
             onClick={() => onSendPreset(item.prompt)}
-            className="suggestion-card active:scale-[0.98]"
+            className="suggestion-card not-italic active:scale-[0.98]"
           >
             <div className="suggestion-topline">
-              <span className="suggestion-title">{item.title}</span>
+              <span className="suggestion-title not-italic">{item.title}</span>
               {item.icon}
             </div>
-            <p className="suggestion-description">{item.desc}</p>
+            <p className="suggestion-description not-italic">{item.desc}</p>
           </button>
         ))}
       </div>

@@ -401,6 +401,7 @@ export default function ChatPage() {
 
   const activeChatTitle =
     chats.find((chat) => chat.id === activeChatId)?.title || "Percakapan baru";
+  const isEmptyChat = messages.length === 0 && !isMessagesLoading;
 
   return (
     <div className="app-shell">
@@ -452,26 +453,28 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <ChatArea
-          messages={messages}
-          isLoading={isLoading}
-          isMessagesLoading={isMessagesLoading}
-          activeChatId={activeChatId}
-          onSendPreset={handleSendPreset}
-          errorMessage={errorMessage}
-          onDismissError={() => setErrorMessage(null)}
-          onReload={handleReload}
-        />
-
-        <footer className="workspace-footer">
-          <ChatInput
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleChatSubmit}
+        <div className={`workspace-body${isEmptyChat ? " is-empty" : ""}`}>
+          <ChatArea
+            messages={messages}
             isLoading={isLoading}
-            stop={stop}
+            isMessagesLoading={isMessagesLoading}
+            activeChatId={activeChatId}
+            onSendPreset={handleSendPreset}
+            errorMessage={errorMessage}
+            onDismissError={() => setErrorMessage(null)}
+            onReload={handleReload}
           />
-        </footer>
+
+          <footer className="workspace-footer">
+            <ChatInput
+              input={input}
+              handleInputChange={handleInputChange}
+              handleSubmit={handleChatSubmit}
+              isLoading={isLoading}
+              stop={stop}
+            />
+          </footer>
+        </div>
       </main>
 
       <MemoryManagerModal
