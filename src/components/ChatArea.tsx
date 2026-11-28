@@ -235,12 +235,11 @@ function CopyMessageButton({ content }: { content: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="message-action-btn active:scale-95"
-      title="Salin teks"
-      aria-label="Salin teks pesan"
+      className="copy-message-button active:scale-95"
+      title={copied ? "Tersalin" : "Salin teks pesan"}
+      aria-label={copied ? "Tersalin" : "Salin teks pesan"}
     >
       {copied ? <Check size={13} /> : <Copy size={13} />}
-      <span>{copied ? "Tersalin" : "Salin"}</span>
     </button>
   );
 }

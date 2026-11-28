@@ -4,27 +4,30 @@ import { MemoryItem } from "@/types";
 
 declare global {
   var __local_memories: MemoryItem[] | undefined;
+  var __local_memories_mtime: number | undefined;
 }
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "memory_store.json");
 
 function ensureStorageLoaded() {
-  if (globalThis.__local_memories) {
-    return;
-  }
-
-  globalThis.__local_memories = [];
-
   try {
     if (fs.existsSync(DATA_FILE)) {
+      const mtime = fs.statSync(DATA_FILE).mtimeMs;
+      if (globalThis.__local_memories && globalThis.__local_memories_mtime === mtime) {
+        return;
+      }
       const raw = fs.readFileSync(DATA_FILE, "utf-8");
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         globalThis.__local_memories = parsed;
+        globalThis.__local_memories_mtime = mtime;
+        return;
       }
     }
-  } catch (err) {
+  } catch (err) {}
+
+  if (!globalThis.__local_memories) {
     globalThis.__local_memories = [];
   }
 }
@@ -40,6 +43,7 @@ function persistStorage() {
       2
     );
     fs.writeFileSync(DATA_FILE, payload, "utf-8");
+    globalThis.__local_memories_mtime = fs.statSync(DATA_FILE).mtimeMs;
   } catch (err) {}
 }
 

@@ -28,14 +28,49 @@ Instruksi Waktu & Sistem:
 2. Jika pengguna menanyakan hari apa hari ini, tanggal berapa sekarang, waktu saat ini, atau relasi waktu seperti kemarin, besok, lusa, atau minggu depan, gunakan informasi waktu lokal di atas secara akurat dan tegas tanpa ragu.
 3. JANGAN PERNAH menyatakan bahwa kamu tidak memiliki akses waktu nyata atau terbatas pada knowledge cutoff ketika ditanya mengenai hari, tanggal, atau waktu saat ini.`;
 
-  const memoryBlock =
-    memories && memories.length > 0
-      ? `\n\n[MEMORI JANGKA PANJANG TENTANG PENGGUNA]:
-Berikut adalah fakta, preferensi, dan profil tentang pengguna yang telah kamu pelajari dari percakapan sebelumnya:
-${memories.map((m) => `- [${m.category.toUpperCase()}] ${m.content}`).join("\n")}
+  let memoryBlock = "";
+  if (memories && memories.length > 0) {
+    const profiles = memories.filter((m) => m.category === "profile");
+    const preferences = memories.filter((m) => m.category === "preference");
+    const otherContext = memories.filter(
+      (m) => m.category !== "profile" && m.category !== "preference"
+    );
 
-Gunakan memori di atas secara alami untuk menyesuaikan jawabanmu agar relevan, personal, dan konsisten tanpa perlu secara eksplisit mengatakan 'berdasarkan database memoriku' atau sejenisnya.`
-      : "";
+    const sections: string[] = [];
+
+    if (profiles.length > 0) {
+      sections.push(
+        `[IDENTITAS & PROFIL PENGGUNA]:\n` +
+          profiles.map((m) => `- ${m.content}`).join("\n")
+      );
+    }
+
+    if (preferences.length > 0) {
+      sections.push(
+        `[PENGATURAN KEPRIBADIAN & GAYA KOMUNIKASI WAJIB]:\n` +
+          preferences.map((m) => `- ${m.content}`).join("\n")
+      );
+    }
+
+    if (otherContext.length > 0) {
+      sections.push(
+        `[TUJUAN, PEKERJAAN & FAKTA TERKAIT]:\n` +
+          otherContext
+            .map((m) => `- [${m.category.toUpperCase()}] ${m.content}`)
+            .join("\n")
+      );
+    }
+
+    memoryBlock = `\n\n[MEMORI GLOBAL PERSISTEN TENTANG PENGGUNA]:
+Informasi berikut tersimpan permanen lintas seluruh sesi percakapan (diurutkan dari pembaruan terbaru ke paling lama):
+${sections.join("\n\n")}
+
+Instruksi Persistensi Memori & Kepribadian:
+1. Kamu WAJIB menerapkan identitas, gaya komunikasi, nada bicara, sapaan/kata ganti, dan kepribadian yang tertulis pada [PENGATURAN KEPRIBADIAN & GAYA KOMUNIKASI WAJIB] di atas SEJAK PESAN PERTAMA pada percakapan baru ini maupun percakapan lanjutan.
+2. Prioritaskan gaya bahasa dan kepribadian yang ditetapkan pengguna dibanding nada formal standar. Jika terdapat pembaruan preferensi, ikuti entri yang berada di urutan paling atas (terbaru).
+3. Kamu sudah mengenal pengguna dari [IDENTITAS & PROFIL PENGGUNA]. Jangan pernah bersikap seolah baru pertama kali bertemu atau meminta pengguna memperkenalkan ulang dirinya.
+4. Gunakan memori di atas secara alami tanpa menyebut frasa kaku seperti 'berdasarkan database memoriku' kecuali memang ditanyakan oleh pengguna.`;
+  }
 
   return `${BASE_SYSTEM_PROMPT}
 
@@ -46,22 +81,80 @@ export async function retrieveRelevantMemories(
   query: string,
   userId: string = "user_default_01",
   threshold: number = 0.55,
-  limit: number = 5
+  limit: number = 12
 ): Promise<MemoryItem[]> {
-  if (!isAIConfigured()) return [];
+  let allUserMemories: MemoryItem[] = [];
+  let vectorMatched: MemoryItem[] = [];
 
-  if (!isSupabaseConfigured()) {
-    const local = localMemoriesStore.getMemories(userId);
-    if (local.length === 0) return [];
+  if (isSupabaseConfigured()) {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      try {
+        const { data: coreData } = await supabase
+          .from("memories")
+          .select("id, user_id, content, category, created_at")
+          .eq("user_id", userId)
+          .in("category", ["profile", "preference"])
+          .order("created_at", { ascending: false });
 
-    const queryTokens = query
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((t) => t.length > 2);
+        if (coreData && coreData.length > 0) {
+          allUserMemories = coreData as MemoryItem[];
+        }
 
-    if (queryTokens.length === 0) return local.slice(0, limit);
+        if (isAIConfigured() && query.trim().length > 0) {
+          const embedding = await generateEmbedding(query);
+          const { data: rpcData } = await supabase.rpc("match_memories", {
+            query_embedding: embedding,
+            match_threshold: threshold,
+            match_count: limit,
+            p_user_id: userId,
+          });
+          if (rpcData && Array.isArray(rpcData)) {
+            vectorMatched = rpcData as MemoryItem[];
+          }
+        }
 
-    return local
+        if (allUserMemories.length === 0 && vectorMatched.length === 0) {
+          const { data: recentData } = await supabase
+            .from("memories")
+            .select("id, user_id, content, category, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(limit);
+          if (recentData) {
+            allUserMemories = recentData as MemoryItem[];
+          }
+        }
+      } catch (err) {
+        console.warn("Kesalahan pada retrieveRelevantMemories Supabase:", err);
+      }
+    }
+  }
+
+  const localMemories = localMemoriesStore.getMemories(userId);
+  const sourceMemories =
+    allUserMemories.length > 0 ? allUserMemories : localMemories;
+
+  if (sourceMemories.length === 0 && vectorMatched.length === 0) {
+    return [];
+  }
+
+  const coreProfileAndPreferences = sourceMemories.filter(
+    (m) => m.category === "profile" || m.category === "preference"
+  );
+
+  const contextualPool = (
+    localMemories.length > 0 ? localMemories : sourceMemories
+  ).filter((m) => m.category !== "profile" && m.category !== "preference");
+
+  const queryTokens = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+
+  let keywordMatched: MemoryItem[] = [];
+  if (queryTokens.length > 0) {
+    keywordMatched = contextualPool
       .map((m) => {
         const contentLower = m.content.toLowerCase();
         const score = queryTokens.reduce(
@@ -72,33 +165,43 @@ export async function retrieveRelevantMemories(
       })
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
       .map((entry) => entry.item);
   }
 
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return [];
-
-  try {
-    const embedding = await generateEmbedding(query);
-
-    const { data, error } = await supabase.rpc("match_memories", {
-      query_embedding: embedding,
-      match_threshold: threshold,
-      match_count: limit,
-      p_user_id: userId,
-    });
-
-    if (error) {
-      console.warn("Pencarian memori Supabase dilewati:", error.message);
-      return [];
+  const combinedContextual = [...vectorMatched, ...keywordMatched];
+  const uniqueContextual = new Map<string, MemoryItem>();
+  for (const item of combinedContextual) {
+    if (
+      item.category !== "profile" &&
+      item.category !== "preference" &&
+      !uniqueContextual.has(item.id)
+    ) {
+      uniqueContextual.set(item.id, item);
     }
-
-    return (data as MemoryItem[]) || [];
-  } catch (err) {
-    console.warn("Kesalahan pada retrieveRelevantMemories:", err);
-    return [];
   }
+
+  const matchedContextualList = Array.from(uniqueContextual.values());
+  if (matchedContextualList.length < 4) {
+    for (const item of contextualPool) {
+      if (!uniqueContextual.has(item.id)) {
+        matchedContextualList.push(item);
+        uniqueContextual.set(item.id, item);
+      }
+      if (matchedContextualList.length >= 4) break;
+    }
+  }
+
+  const finalMap = new Map<string, MemoryItem>();
+  for (const item of [
+    ...coreProfileAndPreferences.slice(0, 12),
+    ...matchedContextualList.slice(0, 6),
+  ]) {
+    if (!finalMap.has(item.id)) {
+      finalMap.set(item.id, item);
+    }
+  }
+
+  return Array.from(finalMap.values());
 }
 
 export async function extractAndSaveMemories(
@@ -112,16 +215,16 @@ export async function extractAndSaveMemories(
     const fastModel = getFastModel();
 
     const prompt = `Analisis percakapan berikut antara Pengguna (User) dan Asisten (Assistant).
-Tentukan apakah ada fakta permanen baru, preferensi, kebiasaan, pekerjaan, nama, atau tujuan jangka panjang yang diungkapkan oleh PENGGUNA.
+Tentukan apakah ada fakta permanen baru, preferensi komunikasi, pengaturan kepribadian/persona AI, sapaan/kata ganti, pekerjaan, nama, profil, atau tujuan jangka panjang yang diungkapkan oleh PENGGUNA.
 
 Pedoman:
-1. Hanya ekstrak hal yang bernilai untuk diingat di sesi-sesi mendatang (contoh: "User adalah software engineer yang suka Next.js", "User tinggal di Jakarta", "User lebih suka penjelasan teknis tanpa analogi anak kecil").
-2. JANGAN simpan percakapan biasa, keluhan sementara, atau pertanyaan sesaat (contoh: "user bertanya cara instal docker" -> BUKAN memori).
+1. Ekstrak seluruh informasi yang bernilai persisten lintas sesi, termasuk identitas diri (nama, sekolah, lokasi, keahlian), tujuan, maupun pengaturan gaya bicara/kepribadian AI yang diminta pengguna (contoh: "User lebih suka gaya komunikasi santai/tegas dengan kata ganti gw/lu", "User bernama Budi dan berprofesi sebagai backend engineer").
+2. JANGAN simpan pertanyaan teknis sesaat atau percakapan umum tanpa informasi personal/preferensi (contoh: "user bertanya cara instal docker" -> BUKAN memori).
 3. Kembalikan format JSON murni:
 [
-  { "content": "teks fakta yang jelas", "category": "preference" | "fact" | "profile" | "goal" | "work" }
+  { "content": "teks fakta atau preferensi yang jelas", "category": "preference" | "fact" | "profile" | "goal" | "work" }
 ]
-Jika TIDAK ADA fakta baru yang perlu disimpan, kembalikan array kosong [].
+Jika TIDAK ADA fakta baru atau preferensi baru yang perlu disimpan, kembalikan array kosong [].
 
 Percakapan:
 User: "${userMessage}"
@@ -152,12 +255,13 @@ Hasil JSON:`;
         ? (item.category as any)
         : "general";
 
+      localMemoriesStore.addMemory({
+        user_id: userId,
+        content: item.content,
+        category,
+      });
+
       if (!isSupabaseConfigured()) {
-        localMemoriesStore.addMemory({
-          user_id: userId,
-          content: item.content,
-          category,
-        });
         continue;
       }
 

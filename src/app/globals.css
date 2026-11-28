@@ -701,7 +701,18 @@ input:focus-visible {
   color: var(--color-subtle);
 }
 
-.copy-message-button,
+.copy-message-button {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-subtle);
+}
+
 .regenerate-button,
 .copy-code-button {
   display: inline-flex;

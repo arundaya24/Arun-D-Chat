@@ -34,6 +34,15 @@ export default function ChatPage() {
   const loadingChatIdRef = useRef<string | null>(null);
   const selectChatAbortControllerRef = useRef<AbortController | null>(null);
   const messagesCacheRef = useRef<Map<string, Message[]>>(new Map());
+  const memoryRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (memoryRefreshTimerRef.current) {
+        clearTimeout(memoryRefreshTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     activeChatIdRef.current = activeChatId;
@@ -108,6 +117,12 @@ export default function ChatPage() {
       setErrorMessage(null);
       loadMemoryCount();
       loadChats();
+      if (memoryRefreshTimerRef.current) {
+        clearTimeout(memoryRefreshTimerRef.current);
+      }
+      memoryRefreshTimerRef.current = setTimeout(() => {
+        loadMemoryCount();
+      }, 2200);
     },
     onError: (err) => {
       console.warn("Kesalahan streaming AI:", err);
